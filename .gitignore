@@ -1,0 +1,13 @@
+*~
+.*~
+*.swp
+*.pyc
+*.pyo
+*.pt
+*.egg-info/
+__pycache__/
+/build
+/data
+/dist
+_[a-zA-Z0-9]*
+outputs/
