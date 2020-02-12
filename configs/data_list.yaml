@@ -1,0 +1,21 @@
+amount:
+  test: 0
+  total: 3
+  train: 2
+  valid: 1
+list:
+  test: []
+  train:
+  - 0522c0001
+  - 0522c0003
+  valid:
+  - 0522c0002
+loader:
+- ROIs:
+  - BrainStem
+  - Parotid_L
+  - Parotid_R
+  data_dir: data
+  data_list: test
+  name: PDDCAParser
+  preprocess_image: true

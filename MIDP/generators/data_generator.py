@@ -7,11 +7,17 @@ contains mainly 3 parts:
 '''
 
 from .. import generators
+from ..loaders import DataLoader
+from typing import Dict
 
 
 class DataGenerator:
 
-    def __init__(self, data_loader, generators_config):
+    def __init__(
+        self,
+        data_loader: DataLoader,
+        generators_config: Dict[str, dict]
+    ):
         '''
         generators_config: {
             generator_name: {

@@ -5,6 +5,7 @@ import numpy as np
 import argparse
 import os
 import yaml
+from typing import Dict, List
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -25,10 +26,10 @@ parser.add_argument(
 args = parser.parse_args()
 
 with open(args.loader_config) as f:
-    loader_config = yaml.safe_load(f)
+    loader_config: List[dict] = yaml.safe_load(f)
 data_loader = DataLoader(*loader_config)
 with open(args.generator_config) as f:
-    generator_config = yaml.safe_load(f)
+    generator_config: Dict[str, dict] = yaml.safe_load(f)
 data_generator = DataGenerator(data_loader, generator_config)
 
 
