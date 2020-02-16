@@ -1,0 +1,7 @@
+- name: PancreasParser
+  data_dir: /tmp/MSD-pancreas
+  data_list: null
+  ROIs:
+  - organ
+  - tumor
+  preprocess_image: true
