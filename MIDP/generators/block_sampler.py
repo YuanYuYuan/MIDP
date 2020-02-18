@@ -10,6 +10,38 @@ from .multi_thread_queue_generator import MultiThreadQueueGenerator
 from ..preprocessings import get_crop_idx
 
 
+class TargetSampler:
+
+    def __init__(self, n_labels, ratios):
+        '''
+        n_labels: the number of labels, including the background
+        ratios: the sampling ratio of each label
+        '''
+
+        # ensure in list type
+        if not isinstance(ratios, list):
+            ratios = [ratios]
+
+        # e.g. ratios: [bg, fg1, fg2] = [0.1, 0.4, 0.5],
+        # then prob_interval: [bg, fg1, fg2] = [0.1, 0.5, 1.0]
+        total = sum(ratios)
+        self.prob_interval = [
+            float(sum(ratios[:i+1])) / float(total)
+            for i in range(n_labels)
+        ]
+
+        # sanity check
+        assert self.prob_interval[-1] == 1.0
+        assert len(ratios) == n_labels
+
+    def sample(self):
+        # return the idx if a random number in its corresponding interval
+        rand = np.random.rand()
+        for (idx, threshold) in enumerate(self.prob_interval):
+            if rand <= threshold:
+                return idx
+
+
 class BlockSampler:
 
     def __init__(self, *args, **kwargs):
@@ -29,7 +61,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
         block_shape=(128, 128, 30),
         out_shape=None,
         n_samples=64,
-        target_ratio=None,
+        ratios=None,
         **kwargs,
     ):
 
@@ -55,16 +87,12 @@ class _BlockSampler(MultiThreadQueueGenerator):
             'label': self.out_shape,
         }
         self.data_types = self.shapes.keys()
-        if target_ratio == None:
+        if ratios is None:
             self.uniform_sample = True
         else:
             self.uniform_sample = False
-            if not isinstance(target_ratio, list):
-                target_ratio = [target_ratio]
-            self.prob_interval = [sum(target_ratio[:k+1]) for k in range(len(target_ratio))]
-            assert len(self.prob_interval) < data_loader.n_labels
+            self.target_sampler = TargetSampler(data_loader.n_labels, ratios)
         self.total = n_samples * data_loader.n_data
-
 
     def __len__(self):
         return self.total
@@ -115,7 +143,6 @@ class _BlockSampler(MultiThreadQueueGenerator):
         def random_sample():
             # sample an arbitrary target index in range
             fail_counter = 0
-            random_sample_fail = False
             while True:
                 idx = tuple(
                     np.random.randint(min, max) for (min, max)
@@ -131,7 +158,6 @@ class _BlockSampler(MultiThreadQueueGenerator):
                 else:
                     fail_counter += 1
                     if fail_counter > 1000:
-                        random_sample_fail = True
                         return None
 
         def random_sample_from_idx(idx_of_target):
@@ -145,27 +171,22 @@ class _BlockSampler(MultiThreadQueueGenerator):
                     in zip(idx_of_target, sampling_range['min'])
                 )
 
-        # sample n_samples blocks
+        # use variable idx_of_target_dict to cache the idx of sampled target
+        # in next n_samples blocks
         idx_of_target_dict = dict()
+
+        # sample n_samples blocks
         for _ in range(self.n_samples):
             if self.uniform_sample:
                 target_idx = arbitrarily_sample()
 
             else:
-                # set default target = 0(brackground)
-                target= 0
-
-                # random change to foreground ROIs(>=1) with given probabilities
-                rand = np.random.rand()
-                for (i, threshold) in enumerate(self.prob_interval):
-                    if rand <= threshold:
-                        target = i + 1
-
+                target = self.target_sampler.sample()
                 if target in idx_of_target_dict:
                     target_idx = random_sample_from_idx(idx_of_target_dict[target])
                 else:
                     target_idx = random_sample()
-                    if target_idx == None:
+                    if target_idx is None:
                         idx_of_target = np.where(data['label'][sampling_range['idx']] == 0)
                         target_idx = random_sample_from_idx(idx_of_target)
                         idx_of_target_dict[target] = idx_of_target

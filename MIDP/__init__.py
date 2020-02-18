@@ -5,7 +5,7 @@ import nibabel as nib
 import numpy as np
 
 
-class ImagesSlicer(object):
+class ImagesSlicer:
 
     def __init__(self, axes, images, idx=None):
         self.axes = axes
