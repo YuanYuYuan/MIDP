@@ -37,6 +37,7 @@ class _Augmentor(MultiThreadQueueGenerator):
         filter_range=None,
         flip=False,
         transpose=False,
+        noise=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -45,6 +46,17 @@ class _Augmentor(MultiThreadQueueGenerator):
 
         # augmenting methods
         self.methods = []
+
+        if noise:
+            def _noise(data):
+                for key in data:
+                    data[key] += np.random.normal(
+                        loc=0.0,
+                        scale=0.05,
+                        size=data[key].shape
+                    )
+                return data
+            self.methods.append(_noise)
 
         if zoom_range is not None:
             from ..preprocessings import zoom
