@@ -49,12 +49,11 @@ class _Augmentor(MultiThreadQueueGenerator):
 
         if noise:
             def _noise(data):
-                for key in data:
-                    data[key] += np.random.normal(
-                        loc=0.0,
-                        scale=0.05,
-                        size=data[key].shape
-                    )
+                data['image'] += np.random.normal(
+                    loc=0.0,
+                    scale=0.05,
+                    size=data['image'].shape
+                )
                 return data
             self.methods.append(_noise)
 
