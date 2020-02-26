@@ -10,6 +10,7 @@ import nibabel as nib
 from multiprocessing import Pool
 from tqdm import tqdm
 import argparse
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -22,10 +23,10 @@ with open(args.config) as f:
     config = yaml.safe_load(f)
 
 
-file_list = [
+data_list = [
     fn.split('/')[-2] for fn in
     glob(os.path.join(config['data_dir'], '*/'))
-][:4]
+]
 os.makedirs(config['output_dir'], exist_ok=True)
 for key in ['images', 'labels']:
     os.makedirs(os.path.join(config['output_dir'], key), exist_ok=True)
@@ -89,6 +90,9 @@ def convert(data_idx, order=2):
 
 
 with Pool(os.cpu_count()) as pool:
-    list(tqdm(pool.imap(convert, file_list), total=len(file_list)))
+    list(tqdm(pool.imap(convert, data_list), total=len(data_list)))
+
+with open(os.path.join(config['output_dir'], 'info.json'), 'w') as f:
+    json.dump({'list': data_list, 'roi_map': config['roi_map']}, f, indent=4)
 
 print('Ouputs have been stored in %s.' % config['output_dir'])
