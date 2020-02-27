@@ -7,4 +7,4 @@ parser_config:
     - BrainStem
     - Parotid_L
     - Parotid_R
-    preprocess_image: true
+    preprocess_image: false

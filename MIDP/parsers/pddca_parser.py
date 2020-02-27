@@ -11,8 +11,8 @@ class PDDCAParser(ParserTemplate):
     def __init__(self, ROIs=['BrainStem'], **kwargs):
         super().__init__(ROIs=ROIs, **kwargs)
 
-        # TODO: improve implementation
-        self.image_dim = (256, 256)
+        # FIXME
+        # self.image_dim = (256, 256)
 
     @property
     def all_ROIs(self):
@@ -43,10 +43,11 @@ class PDDCAParser(ParserTemplate):
         ))
         shape = tuple(nrrd_info['sizes'].tolist())
 
-        # TODO: improve implementation
-        # after rescale and crop
-        z_scale = nrrd_info['space directions'][2, 2]
-        shape = (256, 256, int(round(shape[2] * z_scale)))
+        # FIXME
+        # # after rescale and crop
+        # z_scale = nrrd_info['space directions'][2, 2]
+        # shape = (256, 256, int(round(shape[2] * z_scale)))
+
         return shape
 
     def get_label_shape(self, data_idx):
@@ -102,7 +103,6 @@ class PDDCAParser(ParserTemplate):
         ))
         data = nrrd_data[0]
 
-        # TODO: more preprocessing
         if kwargs.get('preprocess', self.preprocess_image):
             data = preprocessings.window(
                 data,
@@ -110,13 +110,13 @@ class PDDCAParser(ParserTemplate):
                 level=kwargs.get('window_level', self.window_level or 50),
             )
 
-        # TODO: improve implementation
-        # rescaling
-        data = preprocessings.rescale_and_crop(
-            data,
-            scale=np.diag(nrrd_data[1]['space directions']),
-            crop_shape=(256, 256, -1),
-        )
+        # FIXME
+        # # rescaling
+        # data = preprocessings.rescale_and_crop(
+        #     data,
+        #     scale=np.diag(nrrd_data[1]['space directions']),
+        #     crop_shape=(256, 256, -1),
+        # )
 
         if kwargs.get('expand_dim', self.expand_image_dim):
             data = np.expand_dims(data, -1)
@@ -149,13 +149,13 @@ class PDDCAParser(ParserTemplate):
             else:
                 data = np.maximum(data, nrrd_data[0] * (idx+1))
 
-        # TODO: improve implementation
-        # rescaling
-        data = preprocessings.rescale_and_crop(
-            data,
-            scale=np.diag(nrrd_data[1]['space directions']),
-            crop_shape=(256, 256, -1),
-        )
+        # FIXME
+        # # rescaling
+        # data = preprocessings.rescale_and_crop(
+        #     data,
+        #     scale=np.diag(nrrd_data[1]['space directions']),
+        #     crop_shape=(256, 256, -1),
+        # )
 
         if kwargs.get('one_hot', self.one_hot_label):
             data = np.eye(self.n_labels, dtype=np.int16)[data]

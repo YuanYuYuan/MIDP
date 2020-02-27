@@ -27,6 +27,7 @@ data_list = [
     fn.split('/')[-2] for fn in
     glob(os.path.join(config['data_dir'], '*/'))
 ]
+
 os.makedirs(config['output_dir'], exist_ok=True)
 for key in ['images', 'labels']:
     os.makedirs(os.path.join(config['output_dir'], key), exist_ok=True)
@@ -72,6 +73,7 @@ def convert(data_idx, order=2):
     image, spacing_1 = load_image(data_idx)
     label, spacing_2 = load_label(data_idx)
     assert spacing_1 == spacing_2
+    assert image.shape == label.shape
     zoom = tuple(s / config['spacing'] for s in spacing_1)
 
     image = ndimage.zoom(image, zoom, order=order, mode='nearest')
@@ -91,6 +93,7 @@ def convert(data_idx, order=2):
 
 with Pool(os.cpu_count()) as pool:
     list(tqdm(pool.imap(convert, data_list), total=len(data_list)))
+
 
 with open(os.path.join(config['output_dir'], 'info.json'), 'w') as f:
     json.dump({'list': data_list, 'roi_map': config['roi_map']}, f, indent=4)

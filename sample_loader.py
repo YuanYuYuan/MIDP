@@ -2,7 +2,6 @@
 
 from MIDP import DataLoader, ImagesSlicer
 import matplotlib.pyplot as plt
-from typing import List
 import numpy as np
 import argparse
 import yaml
@@ -16,8 +15,10 @@ parser.add_argument(
 args = parser.parse_args()
 
 with open(args.loader_config) as f:
-    loader_config: List[dict] = yaml.safe_load(f)
-data_loader = DataLoader(*loader_config)
+    loader_config = yaml.safe_load(f)
+
+loader_name = loader_config.pop('name')
+data_loader = DataLoader(loader_name, **loader_config)
 
 idx = data_loader.data_list[0]
 

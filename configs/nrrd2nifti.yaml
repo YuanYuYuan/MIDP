@@ -7,6 +7,7 @@ output_dir: ./nifti
 # Unit: mm
 spacing: 1
 
+# TODO: correct ROIs to classes
 # Map each structure to specified value
 # For PDDCA dataset, there're
 #   Mandible        : 1

@@ -29,6 +29,7 @@ args = arg_parser.parse_args()
 # load config
 with open(args.loader_config) as f:
     loader_config = yaml.safe_load(f)
+raw_loader_config = loader_config.copy()
 loader_name = loader_config.pop('name')
 data_loader = DataLoader(loader_name, **loader_config)
 n_data = len(data_loader.data_list)
@@ -57,7 +58,7 @@ else:
 
 # setup data list dict
 data_list_dict = {
-    'loader': loader_config,
+    'loader': raw_loader_config,
     'amount': {
         'total': n_data,
         'train': n_train,

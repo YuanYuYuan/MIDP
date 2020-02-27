@@ -31,7 +31,7 @@ class TargetSampler:
         ]
 
         # sanity check
-        assert self.prob_interval[-1] == 1.0
+        assert self.prob_interval[-1] == 1.0, self.prob_interval
         assert len(ratios) == n_labels
 
     def sample(self):

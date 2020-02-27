@@ -19,7 +19,10 @@ class NIfTILoader:
             self._data_list = info['list']
         self.ROIs = list(info['roi_map'].keys())
         self.roi_map = info['roi_map']
-        self.n_labels = len(self.ROIs)
+
+        # include backgrounds
+        # TODO: change to n_classes
+        self.n_labels = len(self.ROIs) + 1
 
     def get_image(self, data_idx):
         return nib.load(os.path.join(

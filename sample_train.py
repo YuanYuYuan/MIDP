@@ -21,11 +21,12 @@ with open(config['data']) as f:
     data_config = yaml.safe_load(f)
 data_list = data_config['list']
 loader_config = data_config['loader']
+loader_name = loader_config.pop('name')
 
 # data pipeline
 data_gen = dict()
 for stage in ['train', 'valid']:
-    data_loader = DataLoader(*loader_config)
+    data_loader = DataLoader(loader_name, **loader_config)
     if data_list[stage] is not None:
         data_loader.set_data_list(data_list[stage])
     data_gen[stage] = DataGenerator(data_loader, generator_config[stage])

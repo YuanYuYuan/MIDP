@@ -19,7 +19,6 @@ class ParsingLoader:
             for p in [
                 'n_labels',
                 'ROIs',
-                'image_dim'
             ]:
                 try:
                     assert getattr(self, p) == getattr(parser, p), p

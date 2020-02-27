@@ -62,11 +62,11 @@ class _Augmentor(MultiThreadQueueGenerator):
             window_level = window_level if window_level else 50
 
             def _window(data):
-                if isinstance(window_width, tuple):
+                if isinstance(window_width, (tuple, list)):
                     _window_width = random_factor(window_width)
                 else:
                     _window_width = window_width
-                if isinstance(window_level, tuple):
+                if isinstance(window_level, (tuple, list)):
                     _window_level = random_factor(window_level)
                 else:
                     _window_level = window_level
@@ -98,18 +98,19 @@ class _Augmentor(MultiThreadQueueGenerator):
                 return data
             self.methods.append(_zoom)
 
-        if filter_range is not None:
-            from scipy import ndimage
+        # TODO: deprecated
+        # if filter_range is not None:
+        #     from scipy import ndimage
 
-            def _filter(data):
-                sigma = random_factor(filter_range)
-                ndim = len(data['image'].shape)
-                data['image'] = ndimage.gaussian_filter(
-                    data['image'],
-                    sigma=(sigma, sigma) + (0,) * (ndim - 2),
-                )
-                return data
-            self.methods.append(_filter)
+        #     def _filter(data):
+        #         sigma = random_factor(filter_range)
+        #         ndim = len(data['image'].shape)
+        #         data['image'] = ndimage.gaussian_filter(
+        #             data['image'],
+        #             sigma=(sigma, sigma) + (0,) * (ndim - 2),
+        #         )
+        #         return data
+        #     self.methods.append(_filter)
 
         if flip:
             def _flip(data):
