@@ -29,7 +29,8 @@ args = arg_parser.parse_args()
 # load config
 with open(args.loader_config) as f:
     loader_config = yaml.safe_load(f)
-data_loader = DataLoader(*loader_config)
+loader_name = loader_config.pop('name')
+data_loader = DataLoader(loader_name, **loader_config)
 n_data = len(data_loader.data_list)
 assert n_data > 0
 

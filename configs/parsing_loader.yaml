@@ -1,0 +1,10 @@
+name: ParsingLoader
+parser_config:
+  - name: PDDCAParser
+    data_dir: data
+    data_list: test
+    ROIs:
+    - BrainStem
+    - Parotid_L
+    - Parotid_R
+    preprocess_image: true
