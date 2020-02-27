@@ -3,12 +3,13 @@ from .thread_safe_generator import ThreadSafeGenerator as TSG
 from .multi_thread_queue_generator import MultiThreadQueueGenerator
 import numpy as np
 
-'''
-For training only
-'''
+
+# TODO: Add n_samples
+# NOTE: For training only
 
 
 def random_factor(_range):
+    assert len(_range) == 2
     a, b = _range
     return random.random() * (b-a) + a
 
@@ -38,6 +39,8 @@ class _Augmentor(MultiThreadQueueGenerator):
         flip=False,
         transpose=False,
         noise=False,
+        window_width=None,
+        window_level=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -46,6 +49,34 @@ class _Augmentor(MultiThreadQueueGenerator):
 
         # augmenting methods
         self.methods = []
+
+        # convert image to float
+        def _to_float(data):
+            data['image'] = data['image'].astype(np.float)
+            return data
+        self.methods.append(_to_float)
+
+        if window_width or window_level:
+            from ..preprocessings import window
+            window_width = window_width if window_width else 100
+            window_level = window_level if window_level else 50
+
+            def _window(data):
+                if isinstance(window_width, tuple):
+                    _window_width = random_factor(window_width)
+                else:
+                    _window_width = window_width
+                if isinstance(window_level, tuple):
+                    _window_level = random_factor(window_level)
+                else:
+                    _window_level = window_level
+                data['image'] = window(
+                    data['image'],
+                    width=_window_width,
+                    level=_window_level
+                )
+                return data
+            self.methods.append(_window)
 
         if noise:
             def _noise(data):
@@ -72,12 +103,11 @@ class _Augmentor(MultiThreadQueueGenerator):
 
             def _filter(data):
                 sigma = random_factor(filter_range)
-                for key in data:
-                    ndim = len(data[key].shape)
-                    data[key] = ndimage.gaussian_filter(
-                        data[key],
-                        sigma=(sigma, sigma) + (0,) * (ndim - 2),
-                    )
+                ndim = len(data['image'].shape)
+                data['image'] = ndimage.gaussian_filter(
+                    data['image'],
+                    sigma=(sigma, sigma) + (0,) * (ndim - 2),
+                )
                 return data
             self.methods.append(_filter)
 

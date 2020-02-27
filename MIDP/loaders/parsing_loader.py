@@ -1,9 +1,10 @@
 from .. import parsers
 
 
-class DataLoader:
+class ParsingLoader:
 
-    def __init__(self, *multiple_parser_configs, **single_parser_config):
+    # def __init__(self, *multiple_parser_configs, **single_parser_config):
+    def __init__(self, parser_config=None):
         parser_map = dict()
 
         def set_parser_map(parser_config):
@@ -25,11 +26,17 @@ class DataLoader:
                 except AttributeError:
                     setattr(self, p, getattr(parser, p))
 
-        if single_parser_config:
-            set_parser_map(single_parser_config)
-        else:
-            for parser_config in multiple_parser_configs:
-                set_parser_map(parser_config)
+        if not isinstance(parser_config, list):
+            parser_config = [parser_config]
+
+        for _parser_config in parser_config:
+            set_parser_map(_parser_config)
+
+        # if single_parser_config:
+        #     set_parser_map(single_parser_config)
+        # else:
+        #     for parser_config in multiple_parser_configs:
+        #         set_parser_map(parser_config)
 
         self._data_list = list(parser_map.keys())
 

@@ -56,7 +56,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         self.steps_dict = dict()
         self.partition = list()
         for data_idx in self.data_list:
-            img_shape = data_loader.get_label_shape(data_idx)
+            img_shape = data_loader.get_label(data_idx).shape
             steps = tuple(
                 int(np.ceil(i/o)) for (i, o)
                 in zip(img_shape, self.out_shape)

@@ -1,7 +1,8 @@
 import json
 import os
 import nibabel as nib
-from .. import preprocessings
+
+# TODO: correct ROIs to classes
 
 
 class NIfTILoader:
@@ -18,15 +19,14 @@ class NIfTILoader:
             self._data_list = info['list']
         self.ROIs = list(info['roi_map'].keys())
         self.roi_map = info['roi_map']
+        self.n_labels = len(self.ROIs)
 
-    def get_image(self, data_idx, window_width=100, window_level=50):
-        data = nib.load(os.path.join(
+    def get_image(self, data_idx):
+        return nib.load(os.path.join(
             self.data_dir,
             'images',
             data_idx + '.nii.gz'
         )).get_data()
-        data = preprocessings.window(data, window_width, window_level)
-        return data
 
     def get_label(self, data_idx):
         return nib.load(os.path.join(
