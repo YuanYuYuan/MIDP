@@ -86,7 +86,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
             'image': self.block_shape,
             'label': self.out_shape,
         }
-        self.data_types = self.shapes.keys()
+        self.data_types = ['image', 'label']
         if ratios is None:
             self.uniform_sample = True
         else:
@@ -160,20 +160,20 @@ class _BlockSampler(MultiThreadQueueGenerator):
                     if fail_counter > 1000:
                         return None
 
-        def random_sample_from_idx(idx_of_target):
-            if len(idx_of_target[0]) == 0:
+        def random_sample_from_target_range(target_range):
+            if len(target_range[0]) == 0:
                 return arbitrarily_sample()
             else:
                 # randomly sample an idx
-                sample_an_idx = np.random.randint(0, len(idx_of_target[0]))
+                sample_an_idx = np.random.randint(0, len(target_range[0]))
                 return tuple(
                     (i[sample_an_idx] + shift) for i, shift
-                    in zip(idx_of_target, sampling_range['min'])
+                    in zip(target_range, sampling_range['min'])
                 )
 
-        # use variable idx_of_target_dict to cache the idx of sampled target
+        # use variable target_range_cache to cache the idx of sampled target
         # in next n_samples blocks
-        idx_of_target_dict = dict()
+        target_range_cache = dict()
 
         # sample n_samples blocks
         for _ in range(self.n_samples):
@@ -182,14 +182,14 @@ class _BlockSampler(MultiThreadQueueGenerator):
 
             else:
                 target = self.target_sampler.sample()
-                if target in idx_of_target_dict:
-                    target_idx = random_sample_from_idx(idx_of_target_dict[target])
+                if target in target_range_cache:
+                    target_idx = random_sample_from_target_range(target_range_cache[target])
                 else:
                     target_idx = random_sample()
                     if target_idx is None:
-                        idx_of_target = np.where(data['label'][sampling_range['idx']] == 0)
-                        target_idx = random_sample_from_idx(idx_of_target)
-                        idx_of_target_dict[target] = idx_of_target
+                        target_range = np.where(data['label'][sampling_range['idx']] == target)
+                        target_idx = random_sample_from_target_range(target_range)
+                        target_range_cache[target] = target_range
 
             # do cropping
             block = dict()
