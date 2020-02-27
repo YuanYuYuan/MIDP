@@ -1,5 +1,5 @@
 import yaml
-from .loaders import DataLoader
+from .loaders import DataLoader, NIfTILoader
 from .generators import DataGenerator
 import nibabel as nib
 import numpy as np
