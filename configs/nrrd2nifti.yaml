@@ -5,7 +5,7 @@ data_dir: ./data
 output_dir: ./nifti
 
 # Unit: mm
-spacing: 2
+spacing: 1
 
 # Map each structure to specified value
 # For PDDCA dataset, there're
