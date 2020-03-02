@@ -24,6 +24,13 @@ class NIfTILoader:
         # TODO: change to n_classes
         self.n_labels = len(self.ROIs) + 1
 
+    def get_image_shape(self, data_idx):
+        return nib.load(os.path.join(
+            self.data_dir,
+            'images',
+            data_idx + '.nii.gz'
+        )).shape
+
     def get_image(self, data_idx):
         return nib.load(os.path.join(
             self.data_dir,
@@ -37,6 +44,13 @@ class NIfTILoader:
             'labels',
             data_idx + '.nii.gz'
         )).get_data()
+
+    def get_label_shape(self, data_idx):
+        return nib.load(os.path.join(
+            self.data_dir,
+            'labels',
+            data_idx + '.nii.gz'
+        )).shape
 
     @property
     def n_data(self):
