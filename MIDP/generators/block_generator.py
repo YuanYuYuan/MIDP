@@ -56,7 +56,11 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         self.steps_dict = dict()
         self.partition = list()
         for data_idx in self.data_list:
-            img_shape = data_loader.get_label(data_idx).shape
+            if include_label:
+                img_shape = data_loader.get_label(data_idx).shape
+            else:
+                img_shape = data_loader.get_image(data_idx).shape
+
             steps = tuple(
                 int(np.ceil(i/o)) for (i, o)
                 in zip(img_shape, self.out_shape)
@@ -229,8 +233,9 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             restoration[block_idx] = block
 
         # trim redundant voxels
-        orig_shape = self.data_loader.get_label_shape(data_idx)
+        orig_shape = self.img_shape_dict[data_idx]
         if contains_channel:
             orig_shape = (n_channels,) + orig_shape
+        output = restoration[tuple(slice(s) for s in orig_shape)]
 
-        return restoration[tuple(slice(s) for s in orig_shape)]
+        return output
