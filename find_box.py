@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from MIDP import DataLoader
+from tqdm import tqdm
 import numpy as np
 import argparse
 import yaml
@@ -22,7 +23,7 @@ box = {
     'corner1': np.ones(3) * np.Inf,
     'corner2': np.zeros(3),
 }
-for data_idx in data_loader.data_list:
+for data_idx in tqdm(data_loader.data_list):
     indices = np.where(data_loader.get_label(data_idx) > 0)
     corner1 = np.array([min(idx) for idx in indices])
     corner2 = np.array([max(idx) for idx in indices])
