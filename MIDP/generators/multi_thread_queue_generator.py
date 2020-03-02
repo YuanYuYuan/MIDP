@@ -145,7 +145,7 @@ class MultiThreadQueueGenerator:
     def __iter__(self):
 
         if self.verbose:
-            print('[%s] %s initialized' % self.name)
+            print('[%s] initialized' % self.name)
 
         self.reset_threads()
         self._init_jobs()
