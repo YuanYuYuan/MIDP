@@ -1,0 +1,23 @@
+BlockSampler   :                  # sample a 3D block from each data(3D image)
+  shuffle      : True             # shuffle the data list
+  block_shape  : [128, 128, 30]   # the shape of observing area, i.e shape of image
+  out_shape    : [96, 96, 20]     # the valid shape of the block, i.e. shape of label
+  n_samples    : 32               # number of samples of each data
+  ratios       : [0, 1, 2, 2]     # sampling probability of each class, note the lenght should be the same with the number of classes
+  n_workers    : 2                # number of multi-thread workers
+  verbose      : False            # toggle the debug info of this generator
+
+Augmentor      :                  # do preprocessing and data augmentation
+  zoom_range   : [0.8, 1.2]       # zoom the image/label with some scale in range, note that it only apply on x-y plane
+  transpose    : True             # transpose the image/label on x-y plane with a fixed probability 0.5
+  flip         : True             # flip the image/only on x-y plane with a fixed probability 0.5
+  noise        : True             # add a Gaussian noise with mean 0 and sigam 0.05 on the image
+  window_width : [90, 110]        # adjust the contrast with the given window width(or a range), default : 100
+  window_level : [40, 60]         # adjust the contrast with the given window level(or a range), default : 50
+  n_workers    : 2                # number of multi-thread workers
+  verbose      : False            # toggle the debug info of this generator
+
+BatchGenerator :                  # pack the processed data into batches
+  batch_size   : 32               # batch size
+  n_workers    : 2                # number of multi-thread workers
+  verbose      : False            # toggle the debug info of this generator
