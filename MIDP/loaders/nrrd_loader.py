@@ -134,6 +134,20 @@ class NRRDLoader:
 
         return data
 
+    # TODO check consistent spacing
+    def save_prediction(self, data_idx, prediction, output_dir):
+        nrrd.write(
+            os.path.join(output_dir, data_idx + '.nrrd'),
+            prediction,
+            header=nrrd.read_header(
+                os.path.join(
+                    self.data_dir,
+                    data_idx,
+                    'img.nrrd'
+                )
+            )
+        )
+
     @property
     def n_data(self):
         return len(self._data_list)

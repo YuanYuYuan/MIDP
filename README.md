@@ -5,10 +5,16 @@ Still under development, use it with caution.
 
 ## Installation
 
-The used python version is 3.7.  And it's recommended to install locally.
+The used python version is 3.7.  One can install this package locally by cloning the repo and running
 
 ```bash
 python setup.py install --user
+```
+
+or install it by pip
+
+```bash
+pip install git+https://github.com/YuanYuYuan/MIDP
 ```
 
 ## Prepare data

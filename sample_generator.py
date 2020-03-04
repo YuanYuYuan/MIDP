@@ -5,6 +5,7 @@ import numpy as np
 import argparse
 import os
 import yaml
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -24,6 +25,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+timer = time.time()
 with open(args.loader_config) as f:
     loader_config = yaml.safe_load(f)
 loader_name = loader_config.pop('name')
@@ -44,3 +46,5 @@ for idx, data in enumerate(data_generator):
         )
         save_nifti(image, file_path)
         print(f'Outputs file to {file_path}.')
+
+print('Total time:', time.time()-timer)
