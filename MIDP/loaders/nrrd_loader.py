@@ -19,10 +19,10 @@ class NRRDLoader:
     ):
 
         self.data_dir = data_dir
-        self._data_list = [
+        self._data_list = sorted([
             fn.split('/')[-2]
             for fn in glob(os.path.join(self.data_dir, '*/'))
-        ]
+        ])
         if test:
             self._data_list = self._data_list[:2]
         self.ROIs = list(roi_map.keys())
