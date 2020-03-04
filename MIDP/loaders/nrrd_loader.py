@@ -136,17 +136,28 @@ class NRRDLoader:
 
     # TODO check consistent spacing
     def save_prediction(self, data_idx, prediction, output_dir):
-        nrrd.write(
-            os.path.join(output_dir, data_idx + '.nrrd'),
-            prediction,
-            header=nrrd.read_header(
-                os.path.join(
-                    self.data_dir,
-                    data_idx,
-                    'img.nrrd'
-                )
+        os.makedirs(
+            os.path.join(output_dir, data_idx, 'structures'),
+            exist_ok=True
+        )
+        header = nrrd.read_header(
+            os.path.join(
+                self.data_dir,
+                data_idx,
+                'img.nrrd'
             )
         )
+        for roi, idx in self.roi_map:
+            nrrd.write(
+                os.path.join(
+                    output_dir,
+                    data_idx,
+                    'structures',
+                    roi + '.nrrd'
+                ),
+                (prediction == idx).astype(np.int),
+                header=header
+            )
 
     @property
     def n_data(self):
