@@ -147,7 +147,7 @@ class NRRDLoader:
                 'img.nrrd'
             )
         )
-        for roi, idx in self.roi_map:
+        for roi, idx in self.roi_map.items():
             nrrd.write(
                 os.path.join(
                     output_dir,
