@@ -4,7 +4,7 @@ parser_config:
     data_dir: data
     data_list: test
     ROIs:
-    - BrainStem
+    - Brainstem
     - Parotid_L
     - Parotid_R
     preprocess_image: false

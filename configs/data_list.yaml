@@ -12,7 +12,7 @@ list:
   - 0522c0002
 loader:
 - ROIs:
-  - BrainStem
+  - Brainstem
   - Parotid_L
   - Parotid_R
   data_dir: data

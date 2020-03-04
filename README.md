@@ -54,7 +54,7 @@ spacing: 1
 # Map each structure to specified value
 # For PDDCA dataset, there're
 #   Mandible        : 1
-#   BrainStem       : 2
+#   Brainstem       : 2
 #   Parotid_L       : 3
 #   Parotid_R       : 4
 #   Submandibular_L : 5
@@ -64,7 +64,7 @@ spacing: 1
 #   Chiasm          : 9
 # But note that some cases in PDDCA dataset may not contain all structures.
 roi_map:
-  BrainStem       : 1
+  Brainstem       : 1
   Parotid_L       : 2
   Parotid_R       : 3
 ```
@@ -188,7 +188,7 @@ loader:
   name: ParsingLoader
   parser_config:
   - ROIs:
-    - BrainStem
+    - Brainstem
     - Parotid_L
     - Parotid_R
     data_dir: data
