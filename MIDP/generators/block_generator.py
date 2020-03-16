@@ -8,6 +8,7 @@ import random
 import numpy as np
 from .multi_thread_queue_generator import MultiThreadQueueGenerator
 from itertools import product
+from ..preprocessings import crop_to_shape
 
 
 class BlockGenerator:
@@ -28,6 +29,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         shuffle=False,
         block_shape=(128, 128, 30),
         out_shape=None,
+        crop_shape=None,
         include_label=True,
         ordered=False,
         **kwargs,
@@ -48,26 +50,50 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         self.out_shape = tuple(self.out_shape)
         self.block_shape = tuple(self.block_shape)
 
+        # crop
+        self.crop_shape = crop_shape if isinstance(crop_shape, list) else crop_shape
+        if self.crop_shape:
+            steps = tuple(
+                int(np.ceil(i/o)) for (i, o)
+                in zip(self.crop_shape, self.out_shape)
+            )
+
         # data list
         self.data_list = data_loader.data_list
 
-        # count partition
+        # count partition if cropping
+        if self.crop_shape:
+            self.steps_dict = {
+                idx: tuple(
+                    int(np.ceil(i/o)) for (i, o)
+                    in zip(self.crop_shape, self.out_shape)
+                )
+                for idx in self.data_list
+            }
+            self.partition = [np.prod(steps)] * len(self.data_list)
+        else:
+            self.steps_dict = dict()
+            self.partition = list()
+
+        # collect image shape and count partition if not cropping
         self.img_shape_dict = dict()
-        self.steps_dict = dict()
-        self.partition = list()
         for data_idx in self.data_list:
             if include_label:
                 img_shape = data_loader.get_label_shape(data_idx)
             else:
                 img_shape = data_loader.get_image_shape(data_idx)
-
-            steps = tuple(
-                int(np.ceil(i/o)) for (i, o)
-                in zip(img_shape, self.out_shape)
-            )
-            self.partition.append(np.prod(steps))
             self.img_shape_dict[data_idx] = img_shape
-            self.steps_dict[data_idx] = steps
+
+            # check valid cropping
+            if self.crop_shape:
+                assert self.crop_shape < img_shape
+            else:
+                steps = tuple(
+                    int(np.ceil(i/o)) for (i, o)
+                    in zip(img_shape, self.out_shape)
+                )
+                self.partition.append(np.prod(steps))
+                self.steps_dict[data_idx] = steps
 
         self.total = sum(self.partition)
         assert self.total > 0
@@ -108,10 +134,12 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             zip(self.block_shape, self.out_shape)
         )
         steps = self.steps_dict[data_idx]
-        img_shape = self.img_shape_dict[data_idx]
 
-        # for _ in range(np.prod(steps)):
-        #     yield self.zeros
+        if self.crop_shape:
+            data = crop_to_shape(data, self.crop_shape)
+            img_shape = self.crop_shape
+        else:
+            img_shape = self.img_shape_dict[data_idx]
 
         for nth_partition, base_idx in enumerate(product(*map(range, steps))):
             block = dict()
