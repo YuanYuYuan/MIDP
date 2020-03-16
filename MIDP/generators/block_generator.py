@@ -136,7 +136,10 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         steps = self.steps_dict[data_idx]
 
         if self.crop_shape:
-            data = crop_to_shape(data, self.crop_shape)
+            data = {
+                key: crop_to_shape(data[key], self.crop_shape)
+                for key in data
+            }
             img_shape = self.crop_shape
         else:
             img_shape = self.img_shape_dict[data_idx]
