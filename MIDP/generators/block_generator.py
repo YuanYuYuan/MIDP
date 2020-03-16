@@ -51,7 +51,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         self.block_shape = tuple(self.block_shape)
 
         # crop
-        self.crop_shape = crop_shape if isinstance(crop_shape, list) else crop_shape
+        self.crop_shape = tuple(crop_shape) if isinstance(crop_shape, list) else crop_shape
         if self.crop_shape:
             steps = tuple(
                 int(np.ceil(i/o)) for (i, o)
