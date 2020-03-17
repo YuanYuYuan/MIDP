@@ -52,24 +52,18 @@ class _BlockGenerator(MultiThreadQueueGenerator):
 
         # crop
         self.crop_shape = tuple(crop_shape) if isinstance(crop_shape, list) else crop_shape
-        if self.crop_shape:
-            steps = tuple(
-                int(np.ceil(i/o)) for (i, o)
-                in zip(self.crop_shape, self.out_shape)
-            )
+        assert len(self.crop_shape) == 3
 
         # data list
         self.data_list = data_loader.data_list
 
         # count partition if cropping
         if self.crop_shape:
-            self.steps_dict = {
-                idx: tuple(
-                    int(np.ceil(i/o)) for (i, o)
-                    in zip(self.crop_shape, self.out_shape)
-                )
-                for idx in self.data_list
-            }
+            steps = tuple(
+                int(np.ceil(i/o)) for (i, o)
+                in zip(self.crop_shape, self.out_shape)
+            )
+            self.steps_dict = {idx: steps for idx in self.data_list}
             self.partition = [np.prod(steps)] * len(self.data_list)
         else:
             self.steps_dict = dict()
@@ -86,14 +80,15 @@ class _BlockGenerator(MultiThreadQueueGenerator):
 
             # check valid cropping
             if self.crop_shape:
-                assert self.crop_shape < img_shape
+                for i in range(3):
+                    assert self.crop_shape[i] < img_shape[i], (self.crop_shape, img_shape)
             else:
                 steps = tuple(
                     int(np.ceil(i/o)) for (i, o)
                     in zip(img_shape, self.out_shape)
                 )
-                self.partition.append(np.prod(steps))
                 self.steps_dict[data_idx] = steps
+                self.partition.append(np.prod(steps))
 
         self.total = sum(self.partition)
         assert self.total > 0
@@ -127,6 +122,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                 raise KeyError('Key should be either image or label.')
         return self.extract_blocks(data, data_idx)
 
+    # TODO: implement the case of cropping case
     def extract_blocks(self, data, data_idx):
 
         gap = tuple(
