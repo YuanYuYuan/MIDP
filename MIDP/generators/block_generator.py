@@ -52,7 +52,8 @@ class _BlockGenerator(MultiThreadQueueGenerator):
 
         # crop
         self.crop_shape = tuple(crop_shape) if isinstance(crop_shape, list) else crop_shape
-        assert len(self.crop_shape) == 3
+        if self.crop_shape:
+            assert len(self.crop_shape) == 3
 
         # data list
         self.data_list = data_loader.data_list

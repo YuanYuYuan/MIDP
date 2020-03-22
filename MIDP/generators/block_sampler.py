@@ -140,7 +140,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
                 in zip(sampling_range['min'], sampling_range['max'])
             )
 
-        def random_sample():
+        def random_sample(target):
             # sample an arbitrary target index in range
             fail_counter = 0
             while True:
@@ -151,7 +151,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
 
                 # target conditions
                 is_target = data['label'][idx] == target
-                non_empty = data['image'][idx] > 0
+                non_empty = target == 0 or data['image'][idx] > 0
 
                 if is_target and non_empty:
                     return idx
@@ -185,7 +185,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
                 if target in target_range_cache:
                     target_idx = random_sample_from_target_range(target_range_cache[target])
                 else:
-                    target_idx = random_sample()
+                    target_idx = random_sample(target)
                     if target_idx is None:
                         target_range = np.where(data['label'][sampling_range['idx']] == target)
                         target_idx = random_sample_from_target_range(target_range)
