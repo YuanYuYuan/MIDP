@@ -1,6 +1,46 @@
 import numpy as np
 import cv2
+import torch
 from scipy import ndimage
+
+
+def center_crop(data, center, shape):
+    assert len(data.shape) == len(center) == len(shape)
+    assert isinstance(data, torch.Tensor)
+    crop_idx = {'left': [], 'right': []}
+    padding = {'left': [], 'right': []}
+
+    for i in range(len(center)):
+        left_corner = center[i] - (shape[i] // 2)
+        right_corner = left_corner + shape[i]
+
+        crop_idx['left'].append(max(0, left_corner))
+        padding['left'].append(max(0, -left_corner))
+
+        crop_idx['right'].append(min(right_corner, data.shape[i]))
+        padding['right'].append(max(0, right_corner - data.shape[i]))
+
+    crop_range = tuple(
+        slice(lc, rc) for (lc, rc) in
+        zip(crop_idx['left'], crop_idx['right'])
+    )
+
+    need_padding = False
+    for key in padding:
+        if sum(padding[key]) > 0:
+            need_padding = True
+            break
+
+    if need_padding:
+        output = torch.zeros(shape)
+        output[tuple(
+            slice(lp, s - rp) for (lp, rp, s)
+            in zip(padding['left'], padding['right'], shape)
+        )] = data[crop_range]
+        return output
+
+    else:
+        return data[crop_range]
 
 
 def rescale_and_crop(data, scale, crop_shape):
