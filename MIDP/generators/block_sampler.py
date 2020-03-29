@@ -7,7 +7,8 @@ For training only.
 import random
 import numpy as np
 from .multi_thread_queue_generator import MultiThreadQueueGenerator
-from ..preprocessings import get_crop_idx
+# from ..preprocessings import get_crop_idx
+from ..preprocessings import center_crop
 
 
 class TargetSampler:
@@ -60,6 +61,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
         shuffle=False,
         block_shape=(128, 128, 30),
         out_shape=None,
+        shift=None,
         n_samples=64,
         ratios=None,
         **kwargs,
@@ -73,6 +75,11 @@ class _BlockSampler(MultiThreadQueueGenerator):
         self.out_shape = block_shape if out_shape is None else out_shape
         self.block_shape = block_shape
         self.n_samples = n_samples
+        self.shift = tuple(shift) if isinstance(shift, list) else shift
+        if self.shift is not None:
+            assert len(self.shift) == len(self.block_shape)
+            # for s, o in zip(self.shift, self.out_shape):
+            #     assert s <= (o // 2)
 
         # in case of not tuple
         self.out_shape = tuple(self.out_shape)
@@ -151,7 +158,8 @@ class _BlockSampler(MultiThreadQueueGenerator):
 
                 # target conditions
                 is_target = data['label'][idx] == target
-                non_empty = target == 0 or data['image'][idx] > 0
+                # non_empty = target == 0 or data['image'][idx] > 0
+                non_empty = True
 
                 if is_target and non_empty:
                     return idx
@@ -166,10 +174,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
             else:
                 # randomly sample an idx
                 sample_an_idx = np.random.randint(0, len(target_range[0]))
-                return tuple(
-                    (i[sample_an_idx] + shift) for i, shift
-                    in zip(target_range, sampling_range['min'])
-                )
+                return tuple(i[sample_an_idx] for i in target_range)
 
         # use variable target_range_cache to cache the idx of sampled target
         # in next n_samples blocks
@@ -191,11 +196,18 @@ class _BlockSampler(MultiThreadQueueGenerator):
                         target_idx = random_sample_from_target_range(target_range)
                         target_range_cache[target] = target_range
 
+            if self.shift:
+                target_idx = tuple(
+                    t + int(np.clip(np.random.normal(scale=1.5), -1, 1) * s)
+                    for t, s in zip(target_idx, self.shift)
+                )
+
             # do cropping
             block = dict()
             for key in self.data_types:
-                crop_idx = get_crop_idx(target_idx, self.shapes[key])
-                block[key] = data[key][crop_idx]
+                # crop_idx = get_crop_idx(target_idx, self.shapes[key])
+                # block[key] = data[key][crop_idx]
+                block[key] = center_crop(data[key], target_idx, self.shapes[key])
 
                 # sanity check
                 assert block[key].shape == self.shapes[key]

@@ -6,7 +6,6 @@ from scipy import ndimage
 
 def center_crop(data, center, shape):
     assert len(data.shape) == len(center) == len(shape)
-    assert isinstance(data, torch.Tensor)
     crop_idx = {'left': [], 'right': []}
     padding = {'left': [], 'right': []}
 
@@ -32,7 +31,10 @@ def center_crop(data, center, shape):
             break
 
     if need_padding:
-        output = torch.zeros(shape)
+        if isinstance(data, torch.Tensor):
+            output = torch.zeros(shape)
+        else:
+            output = np.zeros(shape)
         output[tuple(
             slice(lp, s - rp) for (lp, rp, s)
             in zip(padding['left'], padding['right'], shape)
