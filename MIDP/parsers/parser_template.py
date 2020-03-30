@@ -34,12 +34,14 @@ class ParserTemplate:
             assert len(data_list) > 0
             self._data_list = data_list
 
-        # check and sort ROIs
-        assert set(ROIs).issubset(self.all_ROIs), ROIs
-        if sort_ROIs:
-            self.ROIs = [ROI for ROI in self.all_ROIs if ROI in ROIs]
-        else:
-            self.ROIs = ROIs
+        # TODO: Remove old implementation
+        # # check and sort ROIs
+        # assert set(ROIs).issubset(self.all_ROIs), ROIs
+        # if sort_ROIs:
+        #     self.ROIs = [ROI for ROI in self.all_ROIs if ROI in ROIs]
+        # else:
+        #     self.ROIs = ROIs
+        self.ROIs = ROIs
 
         self.preprocess_image = preprocess_image
         self.expand_image_dim = expand_image_dim

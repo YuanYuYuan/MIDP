@@ -1,10 +1,17 @@
-BlockSampler   :                  # sample a 3D block from each data(3D image)
-  shuffle      : True             # shuffle the data list
+# BlockSampler   :                  # sample a 3D block from each data(3D image)
+#   shuffle      : True             # shuffle the data list
+#   block_shape  : [128, 128, 30]   # the shape of observing area, i.e shape of image
+#   out_shape    : [96, 96, 20]     # the valid shape of the block, i.e. shape of label
+#   n_samples    : 32               # number of samples of each data
+#   ratios       : [0, 1, 2, 2]     # sampling probability of each class, note the lenght should be the same with the number of classes
+#   n_workers    : 2                # number of multi-thread workers
+#   verbose      : False            # toggle the debug info of this generator
+
+BlockGenerator :                  # sample a 3D block from each data(3D image)
   block_shape  : [128, 128, 30]   # the shape of observing area, i.e shape of image
   out_shape    : [96, 96, 20]     # the valid shape of the block, i.e. shape of label
-  n_samples    : 32               # number of samples of each data
-  ratios       : [0, 1, 2, 2]     # sampling probability of each class, note the lenght should be the same with the number of classes
   n_workers    : 2                # number of multi-thread workers
+  ordered      : True             # preserve order or not
   verbose      : False            # toggle the debug info of this generator
 
 Augmentor      :                  # do preprocessing and data augmentation

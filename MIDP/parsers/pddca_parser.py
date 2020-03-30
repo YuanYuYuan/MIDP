@@ -8,25 +8,26 @@ import os
 
 class PDDCAParser(ParserTemplate):
 
-    def __init__(self, ROIs=['BrainStem'], **kwargs):
+    def __init__(self, ROIs=[], **kwargs):
         super().__init__(ROIs=ROIs, **kwargs)
 
         # FIXME
         # self.image_dim = (256, 256)
 
-    @property
-    def all_ROIs(self):
-        return [
-            'Mandible',         # 1
-            'BrainStem',        # 2
-            'Parotid_L',        # 3
-            'Parotid_R',        # 4
-            'Submandibular_L',  # 5
-            'Submandibular_R',  # 6
-            'OpticNerve_L',     # 7
-            'OpticNerve_R',     # 8
-            'Chiasm',           # 9
-        ]
+    # NOTE: deprecated
+    # @property
+    # def all_ROIs(self):
+    #     return [
+    #         'Mandible',         # 1
+    #         'BrainStem',        # 2
+    #         'Parotid_L',        # 3
+    #         'Parotid_R',        # 4
+    #         'Submandibular_L',  # 5
+    #         'Submandibular_R',  # 6
+    #         'OpticNerve_L',     # 7
+    #         'OpticNerve_R',     # 8
+    #         'Chiasm',           # 9
+    #     ]
 
     @property
     def file_list(self):
