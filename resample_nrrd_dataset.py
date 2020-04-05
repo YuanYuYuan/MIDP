@@ -43,10 +43,13 @@ def convert(data_idx):
         args.spacing for i in range(3)
     )
 
+    new_header = header.copy()
+    new_header['space directions'] = np.diag([args.spacing]*3)
+
     nrrd.write(
         os.path.join(output_dir, 'img.nrrd'),
-        ndimage.zoom(image_nrrd[0], scale, order=2, mode='nearest'),
-        header=header
+        ndimage.zoom(image_nrrd[0], scale, order=1, mode='nearest'),
+        header=new_header
     )
 
     for match in glob(os.path.join(
@@ -67,7 +70,7 @@ def convert(data_idx):
         nrrd.write(
             os.path.join(output_dir, 'structures', '%s.nrrd' % target),
             ndimage.zoom(label_nrrd[0], scale, order=0, mode='nearest'),
-            header=header
+            header=new_header
         )
 
 
