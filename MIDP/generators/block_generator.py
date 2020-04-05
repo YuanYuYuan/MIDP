@@ -291,7 +291,12 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         # insert each block into the restoration array
         base_indices = product(*map(range, steps))
         for (block, base_idx) in zip(blocks, base_indices):
-            assert block.shape == self.out_shape
+            if len(block.shape) == 3:
+                assert block.shape == self.out_shape
+            else:
+                assert len(block.shape) == 4
+                assert block.shape[1:] == self.out_shape
+
             restoration_idx = tuple(
                 slice(bi * st, bi * st + os) for (bi, st, os)
                 in zip(base_idx, self.strides, self.out_shape)
@@ -308,25 +313,32 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                         block
                     )
             else:
+                if contains_channel:
+                    restoration_idx = (slice(None),) + restoration_idx
                 restoration[restoration_idx] = block
+
+        if contains_channel:
+            restoration = np.argmax(restoration, 0)
 
         # reshape the restoration to the original size
         orig_shape = self.img_shape_dict[data_idx]
         if self.crop_shape:
-
-            # trim redundant voxels
-            trim_shape = (n_channels,) + orig_shape \
-                if contains_channel else self.crop_shape
+            # FIXME
+            # # trim redundant voxels
+            # trim_shape = (n_channels,) + orig_shape \
+            #     if contains_channel else self.crop_shape
+            trim_shape = self.crop_shape
             output = restoration[tuple(slice(ts) for ts in trim_shape)]
 
             # pad to original shape
             output = pad_to_shape(output, orig_shape)
 
         else:
-
-            # trim redundant voxels
-            trim_shape = (n_channels,) + orig_shape \
-                if contains_channel else orig_shape
+            # FIXME
+            # # trim redundant voxels
+            # trim_shape = (n_channels,) + orig_shape \
+            #     if contains_channel else orig_shape
+            trim_shape = orig_shape
             output = restoration[tuple(slice(ts) for ts in trim_shape)]
 
         return output
