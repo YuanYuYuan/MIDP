@@ -67,7 +67,21 @@ def crop_to_shape(data, crop_shape):
         ds if cs == -1 else cs for (ds, cs)
         in zip(data.shape, crop_shape)
     )
-    return data[get_crop_idx(center, shape)]
+    crop_range = get_crop_idx(center, shape)
+    return data[crop_range]
+
+
+def pad_to_shape(data, shape):
+    assert len(data.shape) == len(shape)
+    for ds, s in zip(data.shape, shape):
+        assert ds <= s
+    crop_range = get_crop_idx(
+        tuple(s//2 for s in shape),
+        data.shape
+    )
+    output = np.zeros(shape)
+    output[crop_range] = data
+    return output
 
 
 def window(image, width=100, level=50):

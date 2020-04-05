@@ -8,7 +8,7 @@ import random
 import numpy as np
 from .multi_thread_queue_generator import MultiThreadQueueGenerator
 from itertools import product
-from ..preprocessings import crop_to_shape
+from ..preprocessings import crop_to_shape, pad_to_shape
 
 
 class BlockGenerator:
@@ -28,6 +28,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         data_loader,
         shuffle=False,
         block_shape=(128, 128, 30),
+        stride=None,
         out_shape=None,
         crop_shape=None,
         include_label=True,
@@ -50,19 +51,36 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         self.out_shape = tuple(self.out_shape)
         self.block_shape = tuple(self.block_shape)
 
+        # set stride for block partition
+        if stride is None:
+            self.strides = self.out_shape
+        elif isinstance(stride, int):
+            self.strides = (stride,) * 3
+        elif isinstance(stride, (list, tuple)):
+            self.strides = tuple(s for s in stride)
+        else:
+            raise ValueError(stride)
+
+        # check overlap caused by strides
+        self.overlap = (self.strides != self.out_shape)
+        if self.overlap:
+            for i in range(3):
+                assert self.strides[i] <= self.out_shape[i]
+
         # crop
-        self.crop_shape = tuple(crop_shape) if isinstance(crop_shape, list) else crop_shape
+        self.crop_shape = tuple(crop_shape) \
+            if isinstance(crop_shape, list) else crop_shape
         if self.crop_shape:
             assert len(self.crop_shape) == 3
 
         # data list
         self.data_list = data_loader.data_list
 
-        # count partition if cropping
+        # count partition if cropping due to fixed data shape
         if self.crop_shape:
             steps = tuple(
-                int(np.ceil(i/o)) for (i, o)
-                in zip(self.crop_shape, self.out_shape)
+                int(np.ceil(i/s)) for (i, s)
+                in zip(self.crop_shape, self.strides)
             )
             self.steps_dict = {idx: steps for idx in self.data_list}
             self.partition = [np.prod(steps)] * len(self.data_list)
@@ -82,17 +100,24 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             # check valid cropping
             if self.crop_shape:
                 for i in range(3):
-                    assert self.crop_shape[i] < img_shape[i], (self.crop_shape, img_shape)
+                    assert self.crop_shape[i] < img_shape[i], \
+                        (self.crop_shape, img_shape)
             else:
                 steps = tuple(
-                    int(np.ceil(i/o)) for (i, o)
-                    in zip(img_shape, self.out_shape)
+                    int(np.ceil(i/s)) for (i, s)
+                    in zip(img_shape, self.strides)
                 )
                 self.steps_dict[data_idx] = steps
                 self.partition.append(np.prod(steps))
 
         self.total = sum(self.partition)
         assert self.total > 0
+
+        # gap/padding
+        self.gap = tuple(
+            (b - o) // 2 for (b, o) in
+            zip(self.block_shape, self.out_shape)
+        )
 
         # export class variables
         self.shapes = {'image': self.block_shape}
@@ -126,12 +151,6 @@ class _BlockGenerator(MultiThreadQueueGenerator):
     # TODO: implement the case of cropping case
     def extract_blocks(self, data, data_idx):
 
-        gap = tuple(
-            (b - o) // 2 for (b, o) in
-            zip(self.block_shape, self.out_shape)
-        )
-        steps = self.steps_dict[data_idx]
-
         if self.crop_shape:
             data = {
                 key: crop_to_shape(data[key], self.crop_shape)
@@ -141,7 +160,19 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         else:
             img_shape = self.img_shape_dict[data_idx]
 
+        steps = self.steps_dict[data_idx]
         for nth_partition, base_idx in enumerate(product(*map(range, steps))):
+            '''
+            for steps = (1, 2, 3),
+            base_idx will loop over [
+                (0, 0, 0),
+                (0, 0, 1),
+                (0, 0, 2),
+                (0, 1, 0),
+                (0, 1, 1),
+                (0, 1, 2)
+            ]
+            '''
             block = dict()
             for key in self.data_types:
 
@@ -149,8 +180,10 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                 data_slice_idx = tuple()
 
                 for ax in range(3):
-                    origin = base_idx[ax] * self.out_shape[ax]
-                    anchor = origin - gap[ax]
+                    # NOTE
+                    # origin = base_idx[ax] * self.out_shape[ax]
+                    origin = base_idx[ax] * self.strides[ax]
+                    anchor = origin - self.gap[ax]
 
                     if key == 'image':
                         block_slice_idx += (slice(
@@ -227,9 +260,14 @@ class _BlockGenerator(MultiThreadQueueGenerator):
     def restore(self, data_idx, blocks):
 
         steps = self.steps_dict[data_idx]
+        '''
+        Prepares a container to put blocks together.
+        Note that this shape may not equal to raw image shape,
+        since there will be padding and trimming later.
+        '''
         zeros_shape = tuple(
-            (s * os) for (s, os)
-            in zip(steps, self.out_shape)
+            ((s-1) * st + os) for (s, st, os)
+            in zip(steps, self.strides, self.out_shape)
         )
 
         # if output contains channel axis: [N, C, ...]
@@ -244,6 +282,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         if isinstance(blocks, np.ndarray):
             restoration = np.zeros(zeros_shape)
         else:
+            # FIXME torch.Tensor is not allowed anymore due to the later restoration
             import torch
             assert torch.is_tensor(blocks)
             restoration = torch.zeros(zeros_shape, dtype=torch.long)
@@ -252,18 +291,42 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         # insert each block into the restoration array
         base_indices = product(*map(range, steps))
         for (block, base_idx) in zip(blocks, base_indices):
-            block_idx = tuple(
-                slice(i * os, (i+1) * os) for (i, os)
-                in zip(base_idx, self.out_shape)
+            assert block.shape == self.out_shape
+            restoration_idx = tuple(
+                slice(bi * st, bi * st + os) for (bi, st, os)
+                in zip(base_idx, self.strides, self.out_shape)
             )
-            if contains_channel:
-                block_idx = (slice(None),) + block_idx
-            restoration[block_idx] = block
+            if self.overlap:
+                if contains_channel:
+                    # do summation for blocks of shape [C, D_1, D_2, D_3]
+                    restoration_idx = (slice(None),) + restoration_idx
+                    restoration[restoration_idx] += block
+                else:
+                    # do elementwise max for blocks of shape [D_1, D_2, D_3]
+                    restoration[restoration_idx] = np.maximum(
+                        restoration[restoration_idx],
+                        block
+                    )
+            else:
+                restoration[restoration_idx] = block
 
-        # trim redundant voxels
+        # reshape the restoration to the original size
         orig_shape = self.img_shape_dict[data_idx]
-        if contains_channel:
-            orig_shape = (n_channels,) + orig_shape
-        output = restoration[tuple(slice(s) for s in orig_shape)]
+        if self.crop_shape:
+
+            # trim redundant voxels
+            trim_shape = (n_channels,) + orig_shape \
+                if contains_channel else self.crop_shape
+            output = restoration[tuple(slice(ts) for ts in trim_shape)]
+
+            # pad to original shape
+            output = pad_to_shape(output, orig_shape)
+
+        else:
+
+            # trim redundant voxels
+            trim_shape = (n_channels,) + orig_shape \
+                if contains_channel else orig_shape
+            output = restoration[tuple(slice(ts) for ts in trim_shape)]
 
         return output

@@ -136,6 +136,7 @@ class NRRDLoader:
 
     # TODO check consistent spacing
     def save_prediction(self, data_idx, prediction, output_dir):
+        assert isinstance(prediction, np.ndarray), type(prediction)
         os.makedirs(
             os.path.join(output_dir, data_idx, 'structures'),
             exist_ok=True

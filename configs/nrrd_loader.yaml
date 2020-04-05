@@ -5,5 +5,5 @@ roi_map:
   Parotid_L: 2
   Parotid_R: 3
 spacing: 1
-test: false
+test: true
 resample: false

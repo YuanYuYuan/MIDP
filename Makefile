@@ -1,3 +1,8 @@
+test_reconstruction:
+	./test_reconstruction.py \
+		--loader-config configs/nrrd_loader.yaml \
+		--generator-config configs/reconstruction.yaml
+
 test_block_generator_parsing_loader:
 	./sample_generator.py \
 		--loader-config configs/parsing_loader.yaml \
