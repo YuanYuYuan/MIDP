@@ -257,7 +257,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                             tmp_data.append(data)
                 yield ordered_data
 
-    def restore(self, data_idx, blocks):
+    def restore(self, data_idx, blocks, output_threshold=0.35):
 
         steps = self.steps_dict[data_idx]
         '''
@@ -288,6 +288,10 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             restoration = torch.zeros(zeros_shape, dtype=torch.long)
             restoration = restoration.to(blocks.device)
 
+        # do averaging if overlap and in shape [C, H, W, D]
+        if self.overlap and contains_channel:
+            count = np.zeros(zeros_shape)
+
         # insert each block into the restoration array
         base_indices = product(*map(range, steps))
         for (block, base_idx) in zip(blocks, base_indices):
@@ -306,6 +310,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                     # do summation for blocks of shape [C, D_1, D_2, D_3]
                     restoration_idx = (slice(None),) + restoration_idx
                     restoration[restoration_idx] += block
+                    count[restoration_idx] += 1
                 else:
                     # do elementwise max for blocks of shape [D_1, D_2, D_3]
                     restoration[restoration_idx] = np.maximum(
@@ -318,6 +323,14 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                 restoration[restoration_idx] = block
 
         if contains_channel:
+            if self.overlap:
+                restoration /= count
+
+            for i in range(1, restoration.shape[0]):
+                restoration[i, ...] += \
+                    (restoration[i, ...] >= output_threshold).astype(np.float)
+
+            # restoration[1:, ...] = (restoration[1:, ...] >= output_threshold).astype(np.float)
             restoration = np.argmax(restoration, 0)
 
         # reshape the restoration to the original size
