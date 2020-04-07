@@ -39,17 +39,43 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         super().__init__(**kwargs)
 
         # init variables
-        self.shuffle = shuffle
         self.data_loader = data_loader
-        self.out_shape = block_shape if out_shape is None else out_shape
-        self.block_shape = block_shape
+        self.data_list = data_loader.data_list
         self.ordered = ordered
         if ordered:
             self.shuffle = False
+        else:
+            self.shuffle = shuffle
 
-        # in case of not tuple
-        self.out_shape = tuple(self.out_shape)
-        self.block_shape = tuple(self.block_shape)
+        # format block_shape
+        if isinstance(block_shape, (list, tuple)):
+            assert len(block_shape) == 3
+            self.block_shape = tuple(s for s in block_shape)
+        elif isinstance(block_shape, int):
+            self.block_shape = (block_shape, ) * 3
+        else:
+            raise TypeError(block_shape)
+
+        # format out_shape
+        if out_shape is None:
+            self.out_shape = self.block_shape
+        elif isinstance(out_shape, (list, tuple)):
+            assert len(out_shape) == 3
+            for i in range(3):
+                assert out_shape[i] <= self.block_shape[i]
+            self.out_shape = tuple(s for s in out_shape)
+        elif isinstance(out_shape, int):
+            for i in range(3):
+                assert out_shape <= self.block_shape[i]
+            self.out_shape = (out_shape, ) * 3
+        else:
+            raise TypeError(out_shape)
+
+        # compute gap/padding
+        self.gap = tuple(
+            (b - o) // 2 for (b, o) in
+            zip(self.block_shape, self.out_shape)
+        )
 
         # set stride for block partition
         if stride is None:
@@ -59,7 +85,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         elif isinstance(stride, (list, tuple)):
             self.strides = tuple(s for s in stride)
         else:
-            raise ValueError(stride)
+            raise TypeError(stride)
 
         # check overlap caused by strides
         self.overlap = (self.strides != self.out_shape)
@@ -67,57 +93,93 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             for i in range(3):
                 assert self.strides[i] <= self.out_shape[i]
 
-        # crop
-        self.crop_shape = tuple(crop_shape) \
-            if isinstance(crop_shape, list) else crop_shape
-        if self.crop_shape:
-            assert len(self.crop_shape) == 3
-
-        # data list
-        self.data_list = data_loader.data_list
-
-        # count partition if cropping due to fixed data shape
-        if self.crop_shape:
-            steps = tuple(
-                int(np.ceil(i/s)) for (i, s)
-                in zip(self.crop_shape, self.strides)
-            )
-            self.steps_dict = {idx: steps for idx in self.data_list}
-            self.partition = [np.prod(steps)] * len(self.data_list)
+        # format crop_shape
+        if crop_shape is None:
+            self.crop_shape = None
+        elif isinstance(crop_shape, (list, tuple)):
+            assert len(crop_shape) == 3
+            for i in range(3):
+                if crop_shape[i] != -1:
+                    assert crop_shape[i] >= self.block_shape[i], \
+                        (crop_shape, self.block_shape)
+            self.crop_shape = tuple(s for s in crop_shape)
+        elif isinstance(crop_shape, int):
+            for i in range(3):
+                assert crop_shape >= self.block_shape[i]
+            self.crop_shape = (crop_shape, ) * 3
         else:
-            self.steps_dict = dict()
-            self.partition = list()
+            raise TypeError(crop_shape)
 
-        # collect image shape and count partition if not cropping
+        # XXX: deprecated
+        # # count partition if cropping due to fixed data shape
+        # if self.crop_shape:
+        #     steps = tuple(
+        #         int(np.ceil(i/s)) for (i, s)
+        #         in zip(self.crop_shape, self.strides)
+        #     )
+        #     self.steps_dict = {idx: steps for idx in self.data_list}
+        #     self.partition = [np.prod(steps)] * len(self.data_list)
+        # else:
+        #     self.steps_dict = dict()
+        #     self.partition = list()
+
+        # # collect image shape and count partition if not cropping
+        # self.img_shape_dict = dict()
+        # for data_idx in self.data_list:
+        #     if include_label:
+        #         img_shape = data_loader.get_label_shape(data_idx)
+        #     else:
+        #         img_shape = data_loader.get_image_shape(data_idx)
+        #     self.img_shape_dict[data_idx] = img_shape
+
+        #     # check valid cropping
+        #     if self.crop_shape:
+        #         for i in range(3):
+        #             assert self.crop_shape[i] < img_shape[i], \
+        #                 (self.crop_shape, img_shape)
+        #     else:
+        #         steps = tuple(
+        #             int(np.ceil(i/s)) for (i, s)
+        #             in zip(img_shape, self.strides)
+        #         )
+        #         self.steps_dict[data_idx] = steps
+        #         self.partition.append(np.prod(steps))
+
+        self.steps_dict = dict()
+        self.partition = list()
         self.img_shape_dict = dict()
+        if self.crop_shape is not None:
+            self.crop_shape_dict = dict()
+
         for data_idx in self.data_list:
+
             if include_label:
                 img_shape = data_loader.get_label_shape(data_idx)
             else:
                 img_shape = data_loader.get_image_shape(data_idx)
             self.img_shape_dict[data_idx] = img_shape
 
-            # check valid cropping
-            if self.crop_shape:
+            # apply cropping on img_shape if specefied
+            if self.crop_shape is not None:
+                tmp = list(img_shape)
                 for i in range(3):
-                    assert self.crop_shape[i] < img_shape[i], \
-                        (self.crop_shape, img_shape)
-            else:
-                steps = tuple(
-                    int(np.ceil(i/s)) for (i, s)
-                    in zip(img_shape, self.strides)
-                )
-                self.steps_dict[data_idx] = steps
-                self.partition.append(np.prod(steps))
+                    if self.crop_shape[i] != -1:
+                        assert self.crop_shape[i] < img_shape[i], \
+                            (self.crop_shape, img_shape)
+                        tmp[i] = self.crop_shape[i]
+                img_shape = tuple(tmp)
+                self.crop_shape_dict[data_idx] = img_shape
+
+            # count steps and number of partitions
+            steps = tuple(
+                int(np.ceil(i/s)) for (i, s)
+                in zip(img_shape, self.strides)
+            )
+            self.steps_dict[data_idx] = steps
+            self.partition.append(np.prod(steps))
 
         self.total = sum(self.partition)
         assert self.total > 0
-
-        # gap/padding
-        self.gap = tuple(
-            (b - o) // 2 for (b, o) in
-            zip(self.block_shape, self.out_shape)
-        )
 
         # export class variables
         self.shapes = {'image': self.block_shape}
@@ -148,15 +210,22 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                 raise KeyError('Key should be either image or label.')
         return self.extract_blocks(data, data_idx)
 
-    # TODO: implement the case of cropping case
     def extract_blocks(self, data, data_idx):
 
-        if self.crop_shape:
+        # setup img_shape
+        if self.crop_shape is not None:
+            # do cropping
+            img_shape = self.crop_shape_dict[data_idx]
             data = {
                 key: crop_to_shape(data[key], self.crop_shape)
                 for key in data
             }
-            img_shape = self.crop_shape
+
+            # sanity check
+            for key in data:
+                assert data[key].shape == img_shape, \
+                    (data[key].shape, img_shape)
+
         else:
             img_shape = self.img_shape_dict[data_idx]
 
@@ -180,8 +249,6 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                 data_slice_idx = tuple()
 
                 for ax in range(3):
-                    # NOTE
-                    # origin = base_idx[ax] * self.out_shape[ax]
                     origin = base_idx[ax] * self.strides[ax]
                     anchor = origin - self.gap[ax]
 
@@ -237,7 +304,8 @@ class _BlockGenerator(MultiThreadQueueGenerator):
 
                 # check the oreder data in tmp or not
                 for i in range(len(tmp_idx)):
-                    if (tmp_idx[i]['data'], tmp_idx[i]['partition']) == (data_idx, partition_idx):
+                    if (tmp_idx[i]['data'], tmp_idx[i]['partition']) \
+                        == (data_idx, partition_idx):
                         _, ordered_data = tmp_idx.pop(i), tmp_data.pop(i)
                         break
 
@@ -330,27 +398,22 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                 restoration[i, ...] += \
                     (restoration[i, ...] >= output_threshold).astype(np.float)
 
+            # NOTE: determine use soft or hard threshold
             # restoration[1:, ...] = (restoration[1:, ...] >= output_threshold).astype(np.float)
             restoration = np.argmax(restoration, 0)
 
         # reshape the restoration to the original size
         orig_shape = self.img_shape_dict[data_idx]
         if self.crop_shape:
-            # FIXME
-            # # trim redundant voxels
-            # trim_shape = (n_channels,) + orig_shape \
-            #     if contains_channel else self.crop_shape
-            trim_shape = self.crop_shape
+            # trim first
+            trim_shape = self.crop_shape_dict[data_idx]
             output = restoration[tuple(slice(ts) for ts in trim_shape)]
 
-            # pad to original shape
+            # and then pad to original shape
             output = pad_to_shape(output, orig_shape)
 
         else:
-            # FIXME
-            # # trim redundant voxels
-            # trim_shape = (n_channels,) + orig_shape \
-            #     if contains_channel else orig_shape
+            # trim redudant shape
             trim_shape = orig_shape
             output = restoration[tuple(slice(ts) for ts in trim_shape)]
 
