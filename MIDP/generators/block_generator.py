@@ -413,7 +413,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             output = pad_to_shape(output, orig_shape)
 
         else:
-            # trim redudant shape
+            # trim redundant shape
             trim_shape = orig_shape
             output = restoration[tuple(slice(ts) for ts in trim_shape)]
 
