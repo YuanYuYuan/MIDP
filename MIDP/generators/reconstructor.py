@@ -19,19 +19,16 @@ class Reconstructor:
         self.data_list = PG.data_list
         self.partition = PG.partition
         self.restore = PG.restore
+        self.batch_size = BG.batch_size
 
     def on_batches(self, batch_list: List[dict]):
 
-        assert len(batch_list) > 0
+        assert len(batch_list) * self.batch_size >= sum(self.partition), \
+            (len(batch_list) * self.batch_size, sum(self.partition))
+
         len_queue = 0
-        batch_size = None
         for key in batch_list[0]:
             assert key in ['match', 'total', 'prediction']
-            if batch_size is None:
-                batch_size = len(batch_list[0][key])
-            else:
-                assert batch_size == len(batch_list[0][key])
-        assert batch_size > 0
 
         for (data_idx, partition_per_data) in zip(
             self.data_list,
@@ -47,7 +44,7 @@ class Reconstructor:
                             (queue[key], batch[key]),
                             axis=0
                         )
-                len_queue += batch_size
+                len_queue += self.batch_size
 
             output = {'idx': data_idx}
             if 'match' in queue or 'total' in queue:
