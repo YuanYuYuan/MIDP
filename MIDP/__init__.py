@@ -1,6 +1,6 @@
 import yaml
 from .loaders import DataLoader, NIfTILoader
-from .generators import DataGenerator
+from .generators import DataGenerator, Reconstructor
 import nibabel as nib
 import numpy as np
 

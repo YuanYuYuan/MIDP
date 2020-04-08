@@ -3,6 +3,7 @@ from glob import glob
 import nrrd
 from scipy import ndimage
 import numpy as np
+from ..metrics import dice_score
 
 # TODO: correct ROIs to classes
 
@@ -171,3 +172,12 @@ class NRRDLoader:
     def set_data_list(self, new_list):
         assert set(new_list).issubset(self._data_list), new_list
         self._data_list = new_list
+
+    def evaluate(self, data_idx, prediction):
+        return {
+            roi: dice_score(
+                (prediction == val).astype(int),
+                (self.get_label(data_idx) == val).astype(int)
+            )
+            for roi, val in self.roi_map.items()
+        }
