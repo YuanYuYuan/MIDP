@@ -1,3 +1,8 @@
+test_block_generator_nrrd_loader_resample:
+	./sample_generator.py \
+		--loader-config configs/nrrd_loader_resample.yaml \
+		--generator-config configs/block_generator.yaml
+
 test_block_generator_crop_nrrd_loader:
 	./sample_generator.py \
 		--loader-config configs/nrrd_loader.yaml \
