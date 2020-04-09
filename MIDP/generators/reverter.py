@@ -28,7 +28,6 @@ class Reverter:
             (len(batch_list) * self.batch_size, sum(self.partition))
 
         len_queue = 0
-
         batch_idx = 0
         for (data_idx, partition_per_data) in zip(
             self.data_list,
@@ -53,12 +52,10 @@ class Reverter:
             for key in queue:
                 if key == 'match':
                     assert 'total' in queue
-                    match = queue['match'][:partition_per_data]
-                    total = queue['total'][:partition_per_data]
-                    output['score'] = np.sum(
-                        2 * match / total,
-                        axis=1
-                    )
+                    match = np.sum(queue['match'][:partition_per_data], axis=0)[1:]
+                    total = np.sum(queue['total'][:partition_per_data], axis=0)[1:]
+                    output['score'] = 2 * match / total
+
                 elif key == 'prediction':
                     output['prediction'] = self.revert(
                         data_idx,
