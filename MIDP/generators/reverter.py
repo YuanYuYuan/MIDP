@@ -21,6 +21,7 @@ class Reverter:
         self.revert = PG.revert
         self.batch_size = BG.batch_size
         self.revertible = ['match', 'total', 'prediction']
+        self.ROIs = data_gen.struct['DL'].ROIs
 
     def on_batches(self, batch_list: List[dict]):
 
@@ -54,7 +55,10 @@ class Reverter:
                     assert 'total' in queue
                     match = np.sum(queue['match'][:partition_per_data], axis=0)[1:]
                     total = np.sum(queue['total'][:partition_per_data], axis=0)[1:]
-                    output['score'] = 2 * match / total
+                    output['score'] = {
+                        roi: score for roi, score
+                        in zip(self.ROIs, 2 * match / total)
+                    }
 
                 elif key == 'prediction':
                     output['prediction'] = self.revert(
