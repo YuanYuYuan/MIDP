@@ -39,7 +39,7 @@ class NRRDLoader:
         header = nrrd.read_header(nrrd_path)
         if self.resample:
             return tuple(
-                int(
+                round(
                     header['sizes'][i] *
                     header['space directions'][i, i] /
                     self.spacing
