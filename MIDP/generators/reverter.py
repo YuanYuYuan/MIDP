@@ -55,9 +55,11 @@ class Reverter:
                     assert 'total' in queue
                     match = np.sum(queue['match'][:partition_per_data], axis=0)[1:]
                     total = np.sum(queue['total'][:partition_per_data], axis=0)[1:]
+                    dice_score = 2 * match / total
+                    dice_score = dice_score.astype(float)
                     output['score'] = {
                         roi: score for roi, score
-                        in zip(self.ROIs, 2 * match / total)
+                        in zip(self.ROIs, dice_score)
                     }
 
                 elif key == 'prediction':
