@@ -3,7 +3,7 @@ import numpy as np
 from typing import List
 
 
-class Reconstructor:
+class Reverter:
 
     def __init__(self, data_gen: DataGenerator):
         PG = data_gen.struct['PG']
@@ -18,8 +18,9 @@ class Reconstructor:
 
         self.data_list = PG.data_list
         self.partition = PG.partition
-        self.restore = PG.restore
+        self.revert = PG.revert
         self.batch_size = BG.batch_size
+        self.revertible = ['match', 'total', 'prediction']
 
     def on_batches(self, batch_list: List[dict]):
 
@@ -27,43 +28,44 @@ class Reconstructor:
             (len(batch_list) * self.batch_size, sum(self.partition))
 
         len_queue = 0
-        for key in batch_list[0]:
-            assert key in ['match', 'total', 'prediction']
 
+        batch_idx = 0
         for (data_idx, partition_per_data) in zip(
             self.data_list,
             self.partition
         ):
             while len_queue < partition_per_data:
-                batch = batch_list.pop(0)
                 if len_queue == 0:
-                    queue: dict = batch
+                    queue = {
+                        key: batch_list[batch_idx][key] for key
+                        in batch_list[batch_idx] if key in self.revertible
+                    }
                 else:
-                    for key in batch:
+                    for key in queue:
                         queue[key] = np.concatenate(
-                            (queue[key], batch[key]),
+                            (queue[key], batch_list[batch_idx][key]),
                             axis=0
                         )
+                batch_idx += 1
                 len_queue += self.batch_size
 
             output = {'idx': data_idx}
-            if 'match' in queue or 'total' in queue:
-                assert 'match' in queue
-                assert 'total' in queue
-                match = queue['match'][:partition_per_data]
-                total = queue['total'][:partition_per_data]
-                output['score'] = np.sum(
-                    2 * match / total,
-                    axis=1
-                )
-
-            if 'prediction' in queue:
-                output['prediction'] = self.restore(
-                    data_idx,
-                    queue['prediction'][:partition_per_data]
-                )
-
             for key in queue:
+                if key == 'match':
+                    assert 'total' in queue
+                    match = queue['match'][:partition_per_data]
+                    total = queue['total'][:partition_per_data]
+                    output['score'] = np.sum(
+                        2 * match / total,
+                        axis=1
+                    )
+                elif key == 'prediction':
+                    output['prediction'] = self.revert(
+                        data_idx,
+                        queue['prediction'][:partition_per_data]
+                    )
+                else:
+                    assert key in self.revertible
                 queue[key] = queue[key][partition_per_data:]
             len_queue -= partition_per_data
 

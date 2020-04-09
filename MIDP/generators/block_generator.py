@@ -325,7 +325,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                             tmp_data.append(data)
                 yield ordered_data
 
-    def restore(self, data_idx, blocks, output_threshold=0.35):
+    def revert(self, data_idx, blocks, output_threshold=0.35):
 
         steps = self.steps_dict[data_idx]
         '''
