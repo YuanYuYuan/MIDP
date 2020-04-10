@@ -1,3 +1,7 @@
+test_saving_resample_prediction:
+	./save_resample_prediction.py \
+		--loader-config configs/nrrd_loader_resample.yaml
+
 test_block_generator_nrrd_loader_resample:
 	./sample_generator.py \
 		--loader-config configs/nrrd_loader_resample.yaml \

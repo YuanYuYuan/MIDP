@@ -149,6 +149,22 @@ class NRRDLoader:
                 'img.nrrd'
             )
         )
+
+        # resampling
+        if self.resample:
+            scale = tuple(
+                self.spacing / header['space directions'][i, i]
+                for i in range(3)
+            )
+            prediction = ndimage.zoom(
+                prediction,
+                scale,
+                order=0,
+                mode='nearest'
+            )
+            for a, b in zip(prediction.shape, header['sizes']):
+                assert a == b, (prediction.shape, header['sizes'])
+
         for roi, idx in self.roi_map.items():
             nrrd.write(
                 os.path.join(
