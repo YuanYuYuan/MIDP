@@ -1,0 +1,14 @@
+- name: PDDCAParser
+  data_dir: data
+  data_list: null
+  ROIs:
+  # - Mandible         # 1
+  - BrainStem        # 2
+  # - Parotid_L        # 3
+  # - Parotid_R        # 4
+  # - Submandibular_L  # 5
+  # - Submandibular_R  # 6
+  - OpticNerve_L     # 7
+  - OpticNerve_R     # 8
+  - Chiasm           # 9
+  preprocess_image: true

@@ -1,0 +1,33 @@
+BlockSampler   :
+  shuffle      : True
+  # block_shape  : [96, 96, 20]
+  # out_shape    : [64, 64, 10]
+  block_shape  : [128, 128, 30]
+  out_shape    : [96, 96, 20]
+  n_workers    : 2
+  n_samples    : 64
+  ratios       : [0, 1, 1.5, 1.5]
+  verbose      : False
+
+# BlockGenerator :
+#   shuffle      : True
+#   # block_shape  : [96, 96, 20]
+#   # out_shape    : [64, 64, 10]
+#   block_shape  : [128, 128, 30]
+#   out_shape    : [96, 96, 20]
+#   n_workers    : 2
+#   ordered      : False
+#   verbose      : False
+
+# Augmentor      :
+#   zoom_range   : [0.5, 1.2]
+#   filter_range : [0.9, 1.0]
+#   transpose    : False
+#   flip         : False
+#   n_workers    : 2
+#   verbose      : False
+
+# BatchGenerator :
+#   batch_size   : 32
+#   n_workers    : 2
+#   verbose      : False

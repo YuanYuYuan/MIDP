@@ -1,0 +1,19 @@
+BlockGenerator :                  # sample a 3D block from each data(3D image)
+  block_shape  : [96, 96, 96]   # the shape of observing area, i.e shape of image
+  # out_shape    : [96, 96, 20]     # the valid shape of the block, i.e. shape of label
+  crop_shape   : [256, 256, 70]
+  stride       : 32
+  n_workers    : 4                # number of multi-thread workers
+  ordered      : True             # preserve order or not
+  verbose      : False            # toggle the debug info of this generator
+
+Augmentor      :
+  window_width : 100
+  window_level : 50
+  n_workers    : 1
+  verbose      : False
+
+BatchGenerator :                  # pack the processed data into batches
+  batch_size   : 32               # batch size
+  n_workers    : 1                # number of multi-thread workers
+  verbose      : False            # toggle the debug info of this generator

@@ -4,20 +4,31 @@ from tqdm import tqdm
 import numpy as np
 import argparse
 import yaml
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    '--loader-config',
+    '--config',
     required=True,
-    help='loader config'
+    help='config'
+)
+parser.add_argument(
+    '--output',
+    default='box.json',
+    help='output bbox'
 )
 args = parser.parse_args()
 
-with open(args.loader_config) as f:
-    loader_config = yaml.safe_load(f)
+# load config
+with open(args.config) as f:
+    config = yaml.safe_load(f)
+data_list = config['list']
+loader_config = config['loader']
 
 loader_name = loader_config.pop('name')
 data_loader = DataLoader(loader_name, **loader_config)
+if data_list is not None:
+    data_loader.set_data_list(data_list)
 
 box = {
     'corner1': np.ones(3) * np.Inf,
@@ -29,5 +40,11 @@ for data_idx in tqdm(data_loader.data_list):
     corner2 = np.array([max(idx) for idx in indices])
     box['corner1'] = np.minimum(box['corner1'], corner1)
     box['corner2'] = np.maximum(box['corner2'], corner2)
-print(box)
-print(box['corner2'] - box['corner1'])
+box['center'] = (box['corner2'] + box['corner1']) / 2
+box['size'] = box['corner2'] - box['corner1']
+for key in box:
+    box[key] = box[key].tolist()
+print('Bounding box:', box)
+with open(args.output, 'w') as f:
+    json.dump(box, f, indent=2)
+print('has been saved to', args.output)

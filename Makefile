@@ -1,3 +1,7 @@
+find_bounding_box:
+	./find_box.py \
+		--config configs/train_list.yaml
+
 test_saving_resample_prediction:
 	./save_resample_prediction.py \
 		--loader-config configs/nrrd_loader_resample.yaml
@@ -13,12 +17,12 @@ test_block_generator_crop_nrrd_loader:
 		--generator-config configs/block_generator_crop.yaml
 
 test_reconstruction:
-	./test_reconstruction.py \
+	./reconstruction.py \
 		--loader-config configs/nrrd_loader.yaml \
 		--generator-config configs/reconstruction.yaml
 
-new_reconstruction:
-	./test_reconstruction_2.py \
+test_reconstruction_with_reverter:
+	./reconstruction_with_reverter.py \
 		--loader-config configs/nrrd_loader.yaml \
 		--generator-config configs/reconstruction.yaml
 
