@@ -3,7 +3,7 @@
 from MIDP import DataLoader
 import argparse
 import yaml
-import time
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -24,19 +24,10 @@ with open(args.loader_config) as f:
 loader_name = loader_config.pop('name')
 data_loader = DataLoader(loader_name, **loader_config)
 
-data_idx = data_loader.data_list[0]
-
-timer = time.time()
-label = data_loader.get_label(data_idx)
-print('Resampling and loading data took:', time.time()-timer)
-
-timer = time.time()
-data_loader.save_prediction(
-    data_idx,
-    label,
-    args.output_dir
-)
-print('Resampling and saving data took:', time.time()-timer)
-
-print(data_idx)
-print(label.shape)
+for data_idx in tqdm(data_loader.data_list):
+    label = data_loader.get_label(data_idx)
+    data_loader.save_prediction(
+        data_idx,
+        label,
+        args.output_dir
+    )

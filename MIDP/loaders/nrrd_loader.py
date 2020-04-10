@@ -135,7 +135,6 @@ class NRRDLoader:
 
         return data
 
-    # TODO check consistent spacing
     def save_prediction(self, data_idx, prediction, output_dir):
         assert isinstance(prediction, np.ndarray), type(prediction)
         os.makedirs(
@@ -153,7 +152,7 @@ class NRRDLoader:
         # resampling
         if self.resample:
             scale = tuple(
-                self.spacing / header['space directions'][i, i]
+                header['sizes'][i] / prediction.shape[i]
                 for i in range(3)
             )
             prediction = ndimage.zoom(
