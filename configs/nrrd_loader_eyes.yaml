@@ -1,0 +1,9 @@
+name: NRRDLoader
+data_dir: data
+roi_map:
+  OpticNerve_L: 1
+  OpticNerve_R: 2
+  Chiasm: 3
+spacing: 1
+test: true
+resample: false
