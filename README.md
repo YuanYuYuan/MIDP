@@ -29,6 +29,19 @@ In this project, we choose the NIfTI format(.nii.gz) for the purpose of better i
 
 ### Data conversion
 
+#### Resample the NRRD dataset into consistent spacing
+
+In consideration on fast training for models using consistent spacing, we'd better
+resample the dataset and store them as a new fixed data. Run the following command
+to convert the dataset _data_ into new dataset in spacing _1_, and store them at the
+directory _resampeld_data_.
+
+```bash
+./resample_nrrd_dataset.py --data data --spacing 1 --output-dir resampled_data
+```
+
+Although this program runs with multi processes, it might still take several minutes to finish it.
+
 
 #### Conversion: NRRD to NIfTI
 

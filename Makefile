@@ -1,3 +1,9 @@
+resample_nrrd_dataset:
+	./resample_nrrd_dataset.py \
+		--data-dir data \
+		--spacing 1 \
+		--output-dir resamapled_data
+
 find_bounding_box:
 	./find_box.py \
 		--config configs/train_list.yaml

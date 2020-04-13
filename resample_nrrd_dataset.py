@@ -18,6 +18,7 @@ parser.add_argument(
 parser.add_argument(
     '--spacing',
     default=1,
+    type=int,
     help='resampling spacing'
 )
 parser.add_argument(
@@ -73,15 +74,18 @@ def convert(data_idx):
             header=new_header
         )
 
+    return data_idx
+
 
 data_list = []
 for match in sorted(glob(os.path.join(args.data_dir, '*/img.nrrd'))):
     data_idx = match.split('/img.nrrd')[0].split('/')[-1]
     data_list.append(data_idx)
 
-# convert(data_idx)
 with Pool() as pool:
-    list(tqdm(
+    progress_bar = tqdm(
         pool.imap(convert, data_list),
         total=len(data_list)
-    ))
+    )
+    for data_idx in progress_bar:
+        progress_bar.set_description(data_idx)
