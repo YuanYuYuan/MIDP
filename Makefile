@@ -8,6 +8,11 @@ find_bounding_box:
 	./find_box.py \
 		--config configs/train_list.yaml
 
+find_optic_bbox:
+	./find_box.py \
+		--config configs/train_list_eyes.yaml \
+		--output optic_bbox.json
+
 test_saving_resample_prediction:
 	./save_resample_prediction.py \
 		--loader-config configs/nrrd_loader_resample.yaml
