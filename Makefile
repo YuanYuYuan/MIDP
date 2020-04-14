@@ -1,3 +1,9 @@
+split_datalist_train_valid_test:
+	./generate_data_list.py \
+		--loader-config configs/nrrd_loader.yaml \
+		--output train_valid_test_list.yaml \
+		--split-ratio 0.6 0.2
+
 resample_nrrd_dataset:
 	./resample_nrrd_dataset.py \
 		--data-dir data \
