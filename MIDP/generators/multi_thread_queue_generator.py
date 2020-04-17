@@ -9,7 +9,7 @@ class MultiThreadQueueGenerator:
 
     def __init__(
         self,
-        queue_size=0,
+        queue_size=4,
         n_workers=2,
         verbose=0,
         reserved_mem=psutil.virtual_memory().available / 10,  # 1/10
@@ -67,8 +67,7 @@ class MultiThreadQueueGenerator:
             while self.queueing:
                 try:
                     if psutil.virtual_memory().available <= self.reserved_mem:
-                        if self.verbose:
-                            print('Memroy leak!')
+                        print('======= Memroy leak! =======')
                     else:
                         self.queue.put_nowait(data)
                         break
