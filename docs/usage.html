@@ -470,6 +470,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_data_loader">3.1. Data loader</a></li>
 <li><a href="#_data_generator">3.2. Data generator</a></li>
+<li><a href="#_check_the_data_generator_of_bs_ptd_v2">3.3. Check the data generator of bs-ptd-v2</a></li>
 </ul>
 </li>
 </ul>
@@ -1074,7 +1075,8 @@ The following one demo how to use the program to convert the label from NIfTI to
 <div class="content">
 <pre>./sample_generator.py \
     --loader-config configs/parsing_loader.yaml \
-    --generator-config configs/generator.yaml</pre>
+    --generator-config configs/generator.yaml \
+    --output-dir outputs</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1084,7 +1086,8 @@ The following one demo how to use the program to convert the label from NIfTI to
 <div class="content">
 <pre>./sample_generator.py \
     --loader-config configs/nifti_loader.yaml \
-    --generator-config configs/generator.yaml</pre>
+    --generator-config configs/generator.yaml \
+    --output-dir outputs</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1118,7 +1121,7 @@ The following one demo how to use the program to convert the label from NIfTI to
 </div>
 </div>
 <div class="paragraph">
-<p>The output files are stored in 3D NIfTI (nii.gz) in the _outputs_folder.
+<p>The output files are stored in 3D NIfTI (nii.gz) in the <code>outputs</code> folder.
 One may view these images by <a href="http://www.itksnap.org/pmwiki/pmwiki.php">ITK-SNAP</a>.</p>
 </div>
 <div class="imageblock text-center">
@@ -1127,12 +1130,94 @@ One may view these images by <a href="http://www.itksnap.org/pmwiki/pmwiki.php">
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_check_the_data_generator_of_bs_ptd_v2"><a class="anchor" href="#_check_the_data_generator_of_bs_ptd_v2"></a><a class="link" href="#_check_the_data_generator_of_bs_ptd_v2">3.3. Check the data generator of <a href="https://yuanyuyuan.github.io/MIS/depolyments/bs-ptd-v2">bs-ptd-v2</a></a></h3>
+<div class="paragraph">
+<p>Run the following command to check the data pipeline is fine.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>./sample_generator.py \
+    --loader-config configs/nrrd_loader.yaml \
+    --generator-config configs/bs-ptd-v2-generator.yaml</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This <code>nrrd_loader.yaml</code> doesn&#8217;t toggle resampling.
+If you didn&#8217;t run <a href="#_data_conversion">conversion</a> beforehand, please
+use <code>nrrd_loader_resample.yaml</code> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>You can find tune the generator config to run on this test, that is modify</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="yaml"><span class="na">BlockGenerator </span><span class="pi">:</span>
+  <span class="na">block_shape  </span><span class="pi">:</span> <span class="pi">[</span><span class="nv">96</span><span class="pi">,</span> <span class="nv">96</span><span class="pi">,</span> <span class="nv">96</span><span class="pi">]</span>
+  <span class="na">stride       </span><span class="pi">:</span> <span class="m">48</span>
+  <span class="na">crop_shape   </span><span class="pi">:</span> <span class="pi">[</span><span class="nv">256</span><span class="pi">,</span> <span class="nv">256</span><span class="pi">,</span> <span class="nv">-1</span><span class="pi">]</span>
+  <span class="na">n_workers    </span><span class="pi">:</span> <span class="m">4</span>
+  <span class="na">ordered      </span><span class="pi">:</span> <span class="s">True</span>
+  <span class="na">queue_size   </span><span class="pi">:</span> <span class="m">4</span>               <span class="c1"># unit: whole 3D volume from each scan </span><i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="na">verbose      </span><span class="pi">:</span> <span class="s">False</span>
+
+<span class="na">Augmentor      </span><span class="pi">:</span>
+  <span class="na">window_width </span><span class="pi">:</span> <span class="m">100</span>
+  <span class="na">window_level </span><span class="pi">:</span> <span class="m">50</span>
+  <span class="na">n_workers    </span><span class="pi">:</span> <span class="m">1</span>
+  <span class="na">queue_size   </span><span class="pi">:</span> <span class="m">4</span>               <span class="c1"># unit: small blocks extracted from 3D volume </span><i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="na">verbose      </span><span class="pi">:</span> <span class="s">False</span>
+
+<span class="na">BatchGenerator </span><span class="pi">:</span>
+  <span class="na">batch_size   </span><span class="pi">:</span> <span class="s">24</span>              <i class="conum" data-value="2"></i><b>(2)</b>
+  <span class="na">n_workers    </span><span class="pi">:</span> <span class="m">1</span>
+  <span class="na">queue_size   </span><span class="pi">:</span> <span class="m">4</span>               <span class="c1"># unit: batch data of size=batch_size </span><i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="na">verbose      </span><span class="pi">:</span> <span class="s">False</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Find a proper <code>queue_size</code> of max size of the data queue according to your CPU memory.<br>
+Note that the default size is <code>4</code>. And setting it to <code>0</code> means unlimited queue_size.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Find a proper <code>batch_size</code> according to your GPU memory.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Large <code>batch_size</code> may not help the speed, it also depends on the utilization of GPUs.
+If you have found that the utilization of GPUs(can be monitored by running <code>nvtop</code> or <code>watch -n1 nvidia-smi</code>) has been full,
+then increasing the batch size won&#8217;t speedup the process.
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-04-17 04:03:39 +0800
+Last updated 2020-04-18 03:09:48 +0800
 </div>
 </div>
 <style>

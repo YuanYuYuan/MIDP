@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from MIDP import DataGenerator, DataLoader, save_nifti
+from tqdm import tqdm
 import numpy as np
 import argparse
 import os
@@ -20,7 +21,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--output-dir',
-    default='outputs',
+    default=None,
     help='directory to store ouptut images'
 )
 args = parser.parse_args()
@@ -36,15 +37,23 @@ with open(args.generator_config) as f:
 data_generator = DataGenerator(data_loader, generator_config)
 
 
-os.makedirs(args.output_dir, exist_ok=True)
-for idx, data in enumerate(data_generator):
-    for batch_idx, image in enumerate(data['image']):
-        image = np.squeeze(image.numpy())
-        file_path = os.path.join(
-            args.output_dir,
-            f'idx-{idx:03}-batch-{batch_idx:02}.nii.gz'
-        )
-        save_nifti(image, file_path)
-        print(f'Outputs file to {file_path}.')
+if args.output_dir is not None:
+    os.makedirs(args.output_dir, exist_ok=True)
+
+for idx, data in tqdm(
+    enumerate(data_generator),
+    total=len(data_generator),
+    dynamic_ncols=True,
+    desc='[Generating batch data]'
+):
+    if args.output_dir is not None:
+        for batch_idx, image in enumerate(data['image']):
+            image = np.squeeze(image.numpy())
+            file_path = os.path.join(
+                args.output_dir,
+                f'idx-{idx:03}-batch-{batch_idx:02}.nii.gz'
+            )
+            save_nifti(image, file_path)
+            # print(f'Outputs file to {file_path}.')
 
 print('Total time:', time.time()-timer)

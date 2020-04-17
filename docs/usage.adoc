@@ -509,13 +509,15 @@ Directly use parser to load data
 
     ./sample_generator.py \
         --loader-config configs/parsing_loader.yaml \
-        --generator-config configs/generator.yaml
+        --generator-config configs/generator.yaml \
+        --output-dir outputs
 
 or use NIfTI data loader(but required <<_data_conversion, conversion>> beforehand).
 
     ./sample_generator.py \
         --loader-config configs/nifti_loader.yaml \
-        --generator-config configs/generator.yaml
+        --generator-config configs/generator.yaml \
+        --output-dir outputs
 
 with a example generator config _configs/generator.yaml_.
 
@@ -547,7 +549,56 @@ BatchGenerator :                  # pack the processed data into batches
   verbose      : False            # toggle the debug info of this generator
 ----
 
-The output files are stored in 3D NIfTI (nii.gz) in the _outputs_folder.
+The output files are stored in 3D NIfTI (nii.gz) in the `outputs` folder.
 One may view these images by http://www.itksnap.org/pmwiki/pmwiki.php[ITK-SNAP].
 
 image::./pics/sample_generator.png[align="center"]
+
+
+=== Check the data generator of https://yuanyuyuan.github.io/MIS/depolyments/bs-ptd-v2[bs-ptd-v2]
+
+Run the following command to check the data pipeline is fine.
+
+    ./sample_generator.py \
+        --loader-config configs/nrrd_loader.yaml \
+        --generator-config configs/bs-ptd-v2-generator.yaml
+
+[NOTE]
+This `nrrd_loader.yaml` doesn't toggle resampling.
+If you didn't run <<_data_conversion, conversion>> beforehand, please
+use `nrrd_loader_resample.yaml` instead.
+
+You can find tune the generator config to run on this test, that is modify
+
+[source, yaml, options="nowrap"]
+----
+BlockGenerator :
+  block_shape  : [96, 96, 96]
+  stride       : 48
+  crop_shape   : [256, 256, -1]
+  n_workers    : 4
+  ordered      : True
+  queue_size   : 4               # unit: whole 3D volume from each scan <1>
+  verbose      : False
+
+Augmentor      :
+  window_width : 100
+  window_level : 50
+  n_workers    : 1
+  queue_size   : 4               # unit: small blocks extracted from 3D volume <1>
+  verbose      : False
+
+BatchGenerator :
+  batch_size   : 24              <2>
+  n_workers    : 1
+  queue_size   : 4               # unit: batch data of size=batch_size <1>
+  verbose      : False
+----
+<1>  Find a proper `queue_size` of max size of the data queue according to your CPU memory. +
+Note that the default size is `4`. And setting it to `0` means unlimited queue_size.
+<2> Find a proper `batch_size` according to your GPU memory.
+
+[TIP]
+Large `batch_size` may not help the speed, it also depends on the utilization of GPUs.
+If you have found that the utilization of GPUs(can be monitored by running `nvtop` or `watch -n1 nvidia-smi`) has been full,
+then increasing the batch size won't speedup the process.
