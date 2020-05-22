@@ -81,7 +81,7 @@ def convert(data_idx):
 data_list = [
     fn.split('/')[-2]
     for fn in glob(os.path.join(args.data_dir, '*/'))
-][:10]
+]
 data_list = sorted(data_list)
 
 with Pool() as pool:
