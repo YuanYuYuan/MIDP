@@ -1,3 +1,9 @@
+resample_cyberknife_dataset:
+	./resample_cyberknife_dataset.py \
+		--data-dir cyberknife \
+		--spacing 1 \
+		--output-dir resampled_data
+
 split_datalist_train_valid_test:
 	./generate_data_list.py \
 		--loader-config configs/nrrd_loader.yaml \
