@@ -390,6 +390,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
                     restoration_idx = (slice(None),) + restoration_idx
                 restoration[restoration_idx] = block
 
+        # [C, W, H, D] -> [W, H, D]
         if contains_channel:
             if self.overlap:
                 restoration /= count

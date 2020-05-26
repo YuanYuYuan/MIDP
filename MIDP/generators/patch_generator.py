@@ -6,6 +6,7 @@ the data into 2D patches z * [x, y]
 import random
 import numpy as np
 from .multi_thread_queue_generator import MultiThreadQueueGenerator
+from ..preprocessings import crop_to_shape, pad_to_shape
 
 
 class PatchGenerator:
@@ -23,6 +24,7 @@ class _PatchGenerator(MultiThreadQueueGenerator):
     def __init__(
         self,
         data_loader,
+        crop_shape=None,
         shuffle=False,
         include_label=True,
         **kwargs,
@@ -34,13 +36,24 @@ class _PatchGenerator(MultiThreadQueueGenerator):
         self.shuffle = shuffle
         self.data_loader = data_loader
 
+        if crop_shape is not None:
+            assert len(crop_shape) == 3
+            assert isinstance(crop_shape, (tuple, list))
+            self.crop_shape = tuple(crop_shape) if isinstance(crop_shape, list) else crop_shape
+        else:
+            self.crop_shape = None
+
         # data list
         self.data_list = data_loader.data_list
 
         # export class variables
         # TODO improve implementation
         # self.shapes = {'image': data_loader.image_dim}
-        image_dim = data_loader.get_image_shape(self.data_list[0])[:2]
+        if self.crop_shape is None:
+            image_dim = data_loader.get_image_shape(self.data_list[0])[:2]
+        else:
+            image_dim = self.crop_shape[:2]
+
         self.shapes = {'image': image_dim}
         self.data_types = ['image']
         # TODO improve implementation
@@ -72,12 +85,18 @@ class _PatchGenerator(MultiThreadQueueGenerator):
         for key in self.data_types:
             if key == 'image':
                 image = self.data_loader.get_image(data_idx)
+
+                if self.crop_shape is not None:
+                    image = crop_to_shape(image, self.crop_shape)
+
                 # move z axis to first
                 image = np.moveaxis(image, 2, 0)
                 data['image'] = image
 
             elif key == 'label':
                 label = self.data_loader.get_label(data_idx)
+                if self.crop_shape is not None:
+                    label = crop_to_shape(label, self.crop_shape)
                 label = np.moveaxis(label, 2, 0)
                 data['label'] = label
 
@@ -126,5 +145,12 @@ class _PatchGenerator(MultiThreadQueueGenerator):
             assert len(patches.shape) == 3
             # [D, W, H] -> [W, H, D]
             restoration = np.moveaxis(patches, 0, -1)
+
+        # padding: [W, H, D] -> [W', H', D]
+        if self.crop_shape is not None:
+            restoration = pad_to_shape(
+                restoration,
+                self.data_loader.get_label_shape(data_idx)
+            )
 
         return restoration
