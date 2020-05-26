@@ -1,3 +1,9 @@
+test_reconstruction_with_reverter_2d:
+	./reconstruction_with_reverter.py \
+		--loader-config configs/nrrd_loader.yaml \
+		--generator-config configs/reconstruction_2d.yaml
+
+
 resample_cyberknife_dataset:
 	./resample_cyberknife_dataset.py \
 		--data-dir cyberknife \

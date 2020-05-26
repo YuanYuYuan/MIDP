@@ -6,7 +6,6 @@ import os
 import yaml
 import time
 from tqdm import tqdm
-import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

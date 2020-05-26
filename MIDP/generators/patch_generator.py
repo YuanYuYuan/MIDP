@@ -97,15 +97,34 @@ class _PatchGenerator(MultiThreadQueueGenerator):
                     in zip(self.data_types, data_slice)
                 }
 
-    def restore(self, data_idx, patches):
-        orig_shape = self.data_loader.get_label_shape(data_idx)
+    # def restore(self, data_idx, patches):
+    #     orig_shape = self.data_loader.get_label_shape(data_idx)
 
-        if isinstance(patches, np.ndarray):
-            restored_data = np.moveaxis(patches, 0, 2)
+    #     if isinstance(patches, np.ndarray):
+    #         restored_data = np.moveaxis(patches, 0, 2)
+    #     else:
+    #         import torch
+    #         assert torch.is_tensor(patches)
+    #         restored_data = patches.permute(1, 2, 0)
+
+    #     assert orig_shape == restored_data.shape
+    #     return restored_data
+
+    def revert(self, data_idx, patches, output_threshold=0.35):
+
+        # if output contains channel axis: [N, C, ...]
+        contains_channel = len(patches.shape) == 4
+        if contains_channel:
+            n_channels = patches.shape[1]
+            for i in range(1, n_channels):
+                patches[:, i, ...] += \
+                        (patches[:, i, ...] >= output_threshold).astype(np.float)
+            # [D, C, W, H] -> [C, W, H, D]
+            restoration = np.moveaxis(patches, 0, -1)
+            restoration = np.argmax(restoration, 0)
         else:
-            import torch
-            assert torch.is_tensor(patches)
-            restored_data = patches.permute(1, 2, 0)
+            assert len(patches.shape) == 3
+            # [D, W, H] -> [W, H, D]
+            restoration = np.moveaxis(patches, 0, -1)
 
-        assert orig_shape == restored_data.shape
-        return restored_data
+        return restoration
