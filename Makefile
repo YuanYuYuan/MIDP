@@ -1,3 +1,12 @@
+test_block_generator_msd_loader:
+	./sample_generator.py \
+		--loader-config configs/msd_loader.yaml \
+		--generator-config configs/block_generator.yaml
+
+test_msd_loader:
+	./sample_loader.py \
+		--loader-config configs/msd_loader.yaml
+
 test_reconstruction_with_reverter_2d:
 	./reconstruction_with_reverter.py \
 		--loader-config configs/nrrd_loader.yaml \

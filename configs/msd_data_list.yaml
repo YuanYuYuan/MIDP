@@ -1,0 +1,59 @@
+amount:
+  test: 0
+  total: 3
+  train: 32
+  valid: 9
+list:
+  test: []
+  train:
+  - spleen_10
+  - spleen_12
+  - spleen_13
+  - spleen_14
+  - spleen_16
+  - spleen_17
+  - spleen_18
+  - spleen_19
+  - spleen_2
+  - spleen_20
+  - spleen_21
+  - spleen_22
+  - spleen_24
+  - spleen_25
+  - spleen_26
+  - spleen_27
+  - spleen_28
+  - spleen_29
+  - spleen_3
+  - spleen_31
+  - spleen_32
+  - spleen_33
+  - spleen_38
+  - spleen_40
+  - spleen_41
+  - spleen_44
+  - spleen_45
+  - spleen_46
+  - spleen_47
+  - spleen_49
+  - spleen_52
+  - spleen_53
+  valid:
+  - spleen_56
+  - spleen_59
+  - spleen_6
+  - spleen_60
+  - spleen_61
+  - spleen_62
+  - spleen_63
+  - spleen_8
+  - spleen_9
+loader:
+- ROIs:
+  - Brainstem
+  - Parotid_L
+  - Parotid_R
+  data_dir: data
+  data_list: test
+  name: PDDCAParser
+  preprocess_image: true

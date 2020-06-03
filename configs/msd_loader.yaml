@@ -1,0 +1,8 @@
+name: MSDLoader
+image_dir: MSD/imagesTr
+label_dir: MSD/labelsTr
+roi_map:
+  Spleen: 1
+test: true
+# spacing: 1
+# resample: true

@@ -20,6 +20,7 @@ with open(args.loader_config) as f:
 loader_name = loader_config.pop('name')
 data_loader = DataLoader(loader_name, **loader_config)
 
+assert len(data_loader.data_list) > 0
 idx = data_loader.data_list[0]
 
 images = [
