@@ -134,7 +134,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
 
         # sanity check
         for a, b in zip(sampling_range['min'], sampling_range['max']):
-            assert a < b
+            assert a < b, (a, b, data['label'].shape)
 
         sampling_range['idx'] = tuple(
             slice(_min, _max) for (_min, _max)
