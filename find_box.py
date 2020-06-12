@@ -17,6 +17,12 @@ parser.add_argument(
     default='bbox.json',
     help='output bbox'
 )
+parser.add_argument(
+    '--padding',
+    type=int,
+    default=20,
+    help='padding of bbox'
+)
 args = parser.parse_args()
 
 # load config
@@ -46,7 +52,7 @@ def find_size(box):
     return [(j-i) for (i, j) in zip(box[:3], box[3:])]
 
 
-def find_box(target, padding=10):
+def find_box(target, padding=20):
     assert isinstance(padding, int)
     assert len(target.shape) == 3
 
@@ -67,7 +73,7 @@ for idx in tqdm(data_loader.data_list):
     boxes[idx] = {
         'box': find_box(
             data_loader.get_label(idx) > 0,
-            padding=10
+            padding=args.padding
         )
     }
     boxes[idx].update({
