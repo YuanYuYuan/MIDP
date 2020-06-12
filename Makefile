@@ -1,3 +1,9 @@
+test_block_generator_bbox:
+	./sample_generator.py \
+		--loader-config configs/nrrd_loader_eyes_bbox.yaml \
+		--generator-config configs/block_generator_bbox.yaml \
+		--output-dir outputs
+
 test_nrrd_loader_with_bbox:
 	./sample_loader.py \
 		--loader-config configs/nrrd_loader_eyes_bbox.yaml
@@ -38,7 +44,8 @@ resample_nrrd_dataset:
 find_bounding_box:
 	./find_box.py \
 		--config configs/nrrd_loader_eyes.yaml \
-		--output bbox.json
+		--output bbox.json \
+		--padding 20
 
 find_optic_bbox:
 	./find_box.py \

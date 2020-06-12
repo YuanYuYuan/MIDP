@@ -5,6 +5,8 @@ import numpy as np
 import argparse
 import yaml
 import json
+from multiprocessing import Pool
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -68,18 +70,28 @@ def find_box(target, padding=20):
     return corner_1 + corner_2
 
 
-boxes = {}
-for idx in tqdm(data_loader.data_list):
-    boxes[idx] = {
+def job(idx):
+    box = {
         'box': find_box(
             data_loader.get_label(idx) > 0,
             padding=args.padding
         )
     }
-    boxes[idx].update({
-        'center': find_center(boxes[idx]['box']),
-        'shape': find_size(boxes[idx]['box'])
+    box.update({
+        'center': find_center(box['box']),
+        'shape': find_size(box['box'])
     })
+
+    return idx, box
+
+
+with Pool(os.cpu_count()) as pool:
+    boxes = {
+        idx: box for (idx, box) in tqdm(
+            pool.imap(job, data_loader.data_list),
+            total=len(data_loader.data_list)
+        )
+    }
 
 with open(args.output, 'w') as f:
     json.dump(boxes, f, indent=2)
