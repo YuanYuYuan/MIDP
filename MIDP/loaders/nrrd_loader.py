@@ -4,6 +4,8 @@ import nrrd
 from scipy import ndimage
 import numpy as np
 from ..metrics import dice_score
+from ..preprocessings import box_crop
+import json
 
 # TODO: correct ROIs to classes
 
@@ -16,7 +18,8 @@ class NRRDLoader:
         roi_map={},
         spacing=1,
         resample=False,
-        test=False
+        test=False,
+        bbox=None,
     ):
 
         self.data_dir = data_dir
@@ -30,6 +33,21 @@ class NRRDLoader:
         self.roi_map = roi_map
         self.spacing = spacing
         self.resample = resample
+
+        # bounding box of each data
+        if bbox is not None:
+            with open(bbox) as f:
+                self.bbox = json.load(f)
+            for idx in self._data_list:
+                assert idx in self.bbox
+            assert not self.resample, (
+                'Bounding boxes have been determined'
+                'and are incompatible with resampling'
+            )
+            self.use_bbox = True
+        else:
+            self.use_bbox = False
+            self.bbox = None
 
         # include backgrounds
         # TODO change to n_classes
@@ -47,48 +65,57 @@ class NRRDLoader:
             )
         else:
             return tuple(
-                int(header['sizes'][i])
-                for i in range(3)
+                int(header['sizes'][i]) for i in range(3)
             )
 
     def get_image_shape(self, data_idx):
-        return self._get_shape(
-            os.path.join(
-                self.data_dir,
-                data_idx,
-                'img.nrrd'
-            )
-        )
-
-    def get_label_shape(self, data_idx):
-
-        def get_each_shape(roi):
+        if self.use_bbox:
+            return self.bbox[data_idx]['shape']
+        else:
             return self._get_shape(
                 os.path.join(
                     self.data_dir,
                     data_idx,
-                    'structures',
-                    roi + '.nrrd'
+                    'img.nrrd'
                 )
             )
 
-        shape = None
-        for roi in self.ROIs:
-            if shape is None:
-                shape = get_each_shape(roi)
-            else:
-                assert shape == get_each_shape(roi)
+    def get_label_shape(self, data_idx):
 
-        return shape
+        if self.use_bbox:
+            return self.bbox[data_idx]['shape']
+        else:
+            def get_each_shape(roi):
+                return self._get_shape(
+                    os.path.join(
+                        self.data_dir,
+                        data_idx,
+                        'structures',
+                        roi + '.nrrd'
+                    )
+                )
+
+            shape = None
+            for roi in self.ROIs:
+                if shape is None:
+                    shape = get_each_shape(roi)
+                else:
+                    assert shape == get_each_shape(roi)
+
+            return shape
 
     def _get_data(
         self,
         nrrd_path,
         mode='nearest',
-        order=2
+        order=2,
+        box=None,
     ):
         nrrd_data = nrrd.read(nrrd_path)
-        if self.resample:
+        if box is not None:
+            return box_crop(nrrd_data[0], box)
+
+        elif self.resample:
             scale = tuple(
                 nrrd_data[1]['space directions'][i, i] /
                 self.spacing for i in range(3)
@@ -99,10 +126,12 @@ class NRRDLoader:
                 order=order,
                 mode=mode
             )
+
         else:
             return nrrd_data[0]
 
     def get_image(self, data_idx):
+        # FIXME: remove the bad dependencies in get data in case of no resamping
         return self._get_data(
             os.path.join(
                 self.data_dir,
@@ -110,11 +139,13 @@ class NRRDLoader:
                 'img.nrrd'
             ),
             mode='nearest',
-            order=2
+            order=2,
+            box=self.bbox[data_idx]['box'] if self.use_bbox else None
         )
 
     def get_label(self, data_idx):
 
+        # FIXME: remove the bad dependencies in get data in case of no resamping
         def get_each_data(roi):
             return self._get_data(
                 os.path.join(
@@ -124,7 +155,8 @@ class NRRDLoader:
                     roi + '.nrrd'
                 ),
                 mode='nearest',
-                order=0
+                order=0,
+                box=self.bbox[data_idx]['box'] if self.use_bbox else None
             )
         data = None
         for roi, idx in self.roi_map.items():

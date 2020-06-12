@@ -4,6 +4,18 @@ import torch
 from scipy import ndimage
 
 
+def box_crop(data, box: list):
+    assert len(box) == 6
+    assert len(data.shape) == 3
+
+    crop_range = tuple(
+        slice(lc, rc) for (lc, rc) in
+        zip(box[:3], box[3:])
+    )
+
+    return data[crop_range]
+
+
 def center_crop(data, center, shape):
     assert len(data.shape) == len(center) == len(shape)
     crop_idx = {'left': [], 'right': []}

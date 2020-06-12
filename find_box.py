@@ -14,7 +14,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--output',
-    default='box.json',
+    default='bbox.json',
     help='output bbox'
 )
 args = parser.parse_args()
@@ -22,29 +22,59 @@ args = parser.parse_args()
 # load config
 with open(args.config) as f:
     config = yaml.safe_load(f)
-data_list = config['list']
-loader_config = config['loader']
 
-loader_name = loader_config.pop('name')
-data_loader = DataLoader(loader_name, **loader_config)
-if data_list is not None:
-    data_loader.set_data_list(data_list)
+if 'loader' in config:
+    data_list = config['list']
+    loader_config = config['loader']
 
-box = {
-    'corner1': np.ones(3) * np.Inf,
-    'corner2': np.zeros(3),
-}
-for data_idx in tqdm(data_loader.data_list):
-    indices = np.where(data_loader.get_label(data_idx) > 0)
-    corner1 = np.array([min(idx) for idx in indices])
-    corner2 = np.array([max(idx) for idx in indices])
-    box['corner1'] = np.minimum(box['corner1'], corner1)
-    box['corner2'] = np.maximum(box['corner2'], corner2)
-box['center'] = (box['corner2'] + box['corner1']) / 2
-box['size'] = box['corner2'] - box['corner1']
-for key in box:
-    box[key] = box[key].tolist()
-print('Bounding box:', box)
+    loader_name = loader_config.pop('name')
+    data_loader = DataLoader(loader_name, **loader_config)
+    if data_list is not None:
+        data_loader.set_data_list(data_list)
+else:
+    loader_name = config.pop('name')
+    data_loader = DataLoader(loader_name, **config)
+
+
+def find_center(box):
+    assert len(box) == 6
+    return [(i+j) / 2 for (i, j) in zip(box[:3], box[3:])]
+
+
+def find_size(box):
+    assert len(box) == 6
+    return [(j-i) for (i, j) in zip(box[:3], box[3:])]
+
+
+def find_box(target, padding=10):
+    assert isinstance(padding, int)
+    assert len(target.shape) == 3
+
+    indices = np.where(target)
+    corner_1 = [
+        int(max(min(idx) - padding, 0))
+        for idx in indices
+    ]
+    corner_2 = [
+        int(min(max(idx) + padding, margin))
+        for (idx, margin) in zip(indices, target.shape)
+    ]
+    return corner_1 + corner_2
+
+
+boxes = {}
+for idx in tqdm(data_loader.data_list):
+    boxes[idx] = {
+        'box': find_box(
+            data_loader.get_label(idx) > 0,
+            padding=10
+        )
+    }
+    boxes[idx].update({
+        'center': find_center(boxes[idx]['box']),
+        'shape': find_size(boxes[idx]['box'])
+    })
+
 with open(args.output, 'w') as f:
-    json.dump(box, f, indent=2)
+    json.dump(boxes, f, indent=2)
 print('has been saved to', args.output)

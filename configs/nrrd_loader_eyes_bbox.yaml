@@ -7,3 +7,4 @@ roi_map:
 spacing: 1
 test: false
 resample: false
+bbox: box.json
