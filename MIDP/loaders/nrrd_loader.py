@@ -140,7 +140,7 @@ class NRRDLoader:
             ),
             mode='nearest',
             order=2,
-            box=self.bbox[data_idx]['box'] if self.use_bbox else None
+            box=self.bbox[data_idx]['bbox'] if self.use_bbox else None
         )
 
     def get_label(self, data_idx):
@@ -156,7 +156,7 @@ class NRRDLoader:
                 ),
                 mode='nearest',
                 order=0,
-                box=self.bbox[data_idx]['box'] if self.use_bbox else None
+                box=self.bbox[data_idx]['bbox'] if self.use_bbox else None
             )
         data = None
         for roi, idx in self.roi_map.items():

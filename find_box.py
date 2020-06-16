@@ -46,7 +46,7 @@ else:
 
 def find_center(box):
     assert len(box) == 6
-    return [(i+j) / 2 for (i, j) in zip(box[:3], box[3:])]
+    return [int((i+j) / 2) for (i, j) in zip(box[:3], box[3:])]
 
 
 def find_size(box):
@@ -72,14 +72,14 @@ def find_box(target, padding=20):
 
 def job(idx):
     box = {
-        'box': find_box(
+        'bbox': find_box(
             data_loader.get_label(idx) > 0,
             padding=args.padding
         )
     }
     box.update({
-        'center': find_center(box['box']),
-        'shape': find_size(box['box'])
+        'center': find_center(box['bbox']),
+        'shape': find_size(box['bbox'])
     })
 
     return idx, box
