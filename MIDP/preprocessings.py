@@ -86,7 +86,7 @@ def crop_to_shape(data, crop_shape):
 def pad_to_shape(data, shape):
     assert len(data.shape) == len(shape)
     for ds, s in zip(data.shape, shape):
-        assert ds <= s
+        assert ds <= s, (data.shape, shape)
     crop_range = get_crop_idx(
         tuple(s//2 for s in shape),
         data.shape

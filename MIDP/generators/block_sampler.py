@@ -8,7 +8,7 @@ import random
 import numpy as np
 from .multi_thread_queue_generator import MultiThreadQueueGenerator
 # from ..preprocessings import get_crop_idx
-from ..preprocessings import center_crop
+from ..preprocessings import center_crop, pad_to_shape
 
 
 class TargetSampler:
@@ -123,6 +123,20 @@ class _BlockSampler(MultiThreadQueueGenerator):
         return self.sample_blocks(data)
 
     def sample_blocks(self, data):
+
+        need_padding = False
+        for a, b in zip(data['label'].shape, self.block_shape):
+            if a <= b:
+                need_padding = True
+                break
+
+        if need_padding:
+            bigger_shape = tuple(
+                max(bs + 10, ds) for (bs, ds)
+                in zip(self.block_shape, data['label'].shape)
+            )
+            for key in data:
+                data[key] = pad_to_shape(data[key], bigger_shape)
 
         # create a proper sampling range
         sampling_range = dict()
