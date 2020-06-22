@@ -1,0 +1,26 @@
+# Input directory containing NRRD data
+data_dir: ./data
+
+# Output directory storing NIfTI data
+output_dir: ./nifti
+
+# Unit: mm
+spacing: 1
+
+# TODO: correct ROIs to classes
+# Map each structure to specified value
+# For PDDCA dataset, there're
+#   Mandible        : 1
+#   Brainstem       : 2
+#   Parotid_L       : 3
+#   Parotid_R       : 4
+#   Submandibular_L : 5
+#   Submandibular_R : 6
+#   OpticNerve_L    : 7
+#   OpticNerve_R    : 8
+#   Chiasm          : 9
+# But note that some cases in PDDCA dataset may not contain all structures.
+roi_map:
+  OpticNerve_L    : 1
+  OpticNerve_R    : 2
+  Chiasm          : 3
