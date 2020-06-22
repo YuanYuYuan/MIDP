@@ -57,10 +57,16 @@ class Reverter:
                     total = np.sum(queue['total'][:partition_per_data], axis=0)[1:]
                     dice_score = 2 * match / total
                     dice_score = dice_score.astype(float)
-                    output['score'] = {
-                        roi: score for roi, score
-                        in zip(self.ROIs, dice_score)
-                    }
+                    if len(self.ROIs) == len(dice_score):
+                        output['score'] = {
+                            roi: score for roi, score
+                            in zip(self.ROIs, dice_score)
+                        }
+                    else:
+                        output['score'] = {
+                            roi: dice_score[0] for roi in self.ROIs
+                        }
+
 
                 elif key == 'prediction':
                     output['prediction'] = self.revert(
