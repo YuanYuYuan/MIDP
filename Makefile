@@ -1,3 +1,7 @@
+nrrd_to_nifti_vis:
+	./nrrd2nifti.py \
+		--config configs/nrrd2nifti_vis.yaml
+
 test_block_generator_bbox:
 	./sample_generator.py \
 		--loader-config configs/nrrd_loader_eyes_bbox.yaml \
