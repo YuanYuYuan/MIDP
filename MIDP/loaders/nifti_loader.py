@@ -3,13 +3,19 @@ import os
 import nibabel as nib
 import numpy as np
 from ..metrics import dice_score
+from ..preprocessings import box_crop
 
 # TODO: correct ROIs to classes
 
 
 class NIfTILoader:
 
-    def __init__(self, data_dir, test=False):
+    def __init__(
+        self,
+        data_dir,
+        test=False,
+        bbox=None,
+    ):
 
         with open(os.path.join(data_dir, 'info.json')) as f:
             info = json.load(f)
@@ -22,37 +28,66 @@ class NIfTILoader:
         self.ROIs = list(info['roi_map'].keys())
         self.roi_map = info['roi_map']
 
+        # bounding box of each data
+        if bbox is not None:
+            with open(bbox) as f:
+                self.bbox = json.load(f)
+            for idx in self._data_list:
+                assert idx in self.bbox
+            assert not self.resample, (
+                'Bounding boxes have been determined'
+                'and are incompatible with resampling'
+            )
+            self.use_bbox = True
+        else:
+            self.use_bbox = False
+            self.bbox = None
+
         # include backgrounds
         # TODO: change to n_classes
         self.n_labels = len(self.ROIs) + 1
 
     def get_image_shape(self, data_idx):
-        return nib.load(os.path.join(
-            self.data_dir,
-            'images',
-            data_idx + '.nii.gz'
-        )).shape
+        if self.use_bbox:
+            return self.bbox[data_idx]['shape']
+        else:
+            return nib.load(os.path.join(
+                self.data_dir,
+                'images',
+                data_idx + '.nii.gz'
+            )).shape
 
     def get_image(self, data_idx):
-        return nib.load(os.path.join(
+        data = nib.load(os.path.join(
             self.data_dir,
             'images',
             data_idx + '.nii.gz'
         )).get_data()
 
+        if self.use_bbox:
+            data = box_crop(data, self.bbox[data_idx]['bbox'])
+        return data
+
     def get_label(self, data_idx):
-        return nib.load(os.path.join(
+        data = nib.load(os.path.join(
             self.data_dir,
             'labels',
             data_idx + '.nii.gz'
         )).get_data()
 
+        if self.use_bbox:
+            data = box_crop(data, self.bbox[data_idx]['bbox'])
+        return data
+
     def get_label_shape(self, data_idx):
-        return nib.load(os.path.join(
-            self.data_dir,
-            'labels',
-            data_idx + '.nii.gz'
-        )).shape
+        if self.use_bbox:
+            return self.bbox[data_idx]['shape']
+        else:
+            return nib.load(os.path.join(
+                self.data_dir,
+                'labels',
+                data_idx + '.nii.gz'
+            )).shape
 
     @property
     def n_data(self):
