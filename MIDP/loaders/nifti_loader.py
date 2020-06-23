@@ -34,10 +34,6 @@ class NIfTILoader:
                 self.bbox = json.load(f)
             for idx in self._data_list:
                 assert idx in self.bbox
-            assert not self.resample, (
-                'Bounding boxes have been determined'
-                'and are incompatible with resampling'
-            )
             self.use_bbox = True
         else:
             self.use_bbox = False
