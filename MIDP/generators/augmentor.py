@@ -2,6 +2,7 @@ import random
 from .thread_safe_generator import ThreadSafeGenerator as TSG
 from .multi_thread_queue_generator import MultiThreadQueueGenerator
 import numpy as np
+import torch
 
 
 # TODO: Add n_samples
@@ -39,6 +40,7 @@ class _Augmentor(MultiThreadQueueGenerator):
         flip=False,
         transpose=False,
         noise=False,
+        affine=False,
         window_width=None,
         window_level=None,
         **kwargs,
@@ -50,12 +52,51 @@ class _Augmentor(MultiThreadQueueGenerator):
         # augmenting methods
         self.methods = []
 
+        # affine
+        if affine:
+            import torchio
+            from torchio.transforms import (
+                RandomAffine,
+                RandomElasticDeformation,
+                OneOf,
+            )
+            transform = OneOf(
+                {
+                    RandomAffine(): 0.8,
+                    RandomElasticDeformation(): 0.2
+                },
+                p=0.75,
+            )
+
+            def _affine(data):
+
+                for key in data:
+                    data[key] = torch.Tensor(data[key])
+
+                transformed = transform(torchio.Subject(
+                    image=torchio.Image(
+                        tensor=data['image'],
+                        type=torchio.INTENSITY
+                    ),
+                    label=torchio.Image(
+                        tensor=data['label'],
+                        type=torchio.LABEL
+                    )
+                ))
+
+                data['image'] = transformed.image.numpy()
+                data['label'] = transformed.label.numpy()
+                return data
+
+            self.methods.append(_affine)
+
         # convert image to float
         def _to_float(data):
             data['image'] = data['image'].astype(np.float)
             return data
         self.methods.append(_to_float)
 
+        # adjust contrast/window
         if window_width or window_level:
             from ..preprocessings import window
             window_width = window_width if window_width else 100

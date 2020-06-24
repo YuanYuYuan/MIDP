@@ -1,0 +1,3 @@
+name: NIfTILoader
+data_dir: /storage/data/brain/PDDCA-nifti-1mm
+bbox: ./bbox/pddca-1mm-vis.json

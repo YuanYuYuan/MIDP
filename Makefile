@@ -1,3 +1,10 @@
+test_augmentation:
+	rm -rvf outputs
+	./sample_generator.py \
+		--loader-config configs/nifti_loader_test_aug.yaml \
+		--generator-config configs/genenrator_test_aug.yaml \
+		--output-dir outputs
+
 nrrd_to_nifti_vis:
 	./nrrd2nifti.py \
 		--config configs/nrrd2nifti_vis.yaml
