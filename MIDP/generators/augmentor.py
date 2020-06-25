@@ -62,8 +62,8 @@ class _Augmentor(MultiThreadQueueGenerator):
             )
             transform = OneOf(
                 {
-                    RandomAffine(): 0.8,
-                    RandomElasticDeformation(): 0.2
+                    RandomAffine(translation=10): 0.5,
+                    RandomElasticDeformation(): 0.5
                 },
                 p=0.75,
             )
