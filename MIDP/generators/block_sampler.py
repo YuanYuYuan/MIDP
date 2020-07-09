@@ -61,6 +61,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
         shuffle=False,
         block_shape=(128, 128, 30),
         out_shape=None,
+        pad_first=False,
         shift=None,
         n_samples=64,
         ratios=None,
@@ -76,6 +77,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
         self.block_shape = block_shape
         self.n_samples = n_samples
         self.shift = tuple(shift) if isinstance(shift, list) else shift
+        self.pad_first = pad_first
         if self.shift is not None:
             assert len(self.shift) == len(self.block_shape)
             # for s, o in zip(self.shift, self.out_shape):
@@ -120,9 +122,18 @@ class _BlockSampler(MultiThreadQueueGenerator):
                 data[key] = self.data_loader.get_label(data_idx)
             else:
                 raise KeyError('Key should be either image or label.')
+
         return self.sample_blocks(data)
 
     def sample_blocks(self, data):
+
+        if self.pad_first:
+            bigger_shape = tuple(
+                bs // 2 + ds for (bs, ds)
+                in zip(self.block_shape, data['label'].shape)
+            )
+            for key in data:
+                data[key] = pad_to_shape(data[key], bigger_shape)
 
         need_padding = False
         for a, b in zip(data['label'].shape, self.block_shape):
@@ -140,7 +151,11 @@ class _BlockSampler(MultiThreadQueueGenerator):
 
         # create a proper sampling range
         sampling_range = dict()
-        sampling_range['min'] = tuple(bs//2 for bs in self.block_shape)
+        if self.pad_first:
+            sampling_range['min'] = tuple(bs//2 for bs in self.block_shape)
+        else:
+            sampling_range['min'] = tuple(bs//2 for bs in self.block_shape)
+
         sampling_range['max'] = tuple(
             (ls - bs//2) for (ls, bs) in
             zip(data['label'].shape, self.block_shape)
@@ -188,7 +203,13 @@ class _BlockSampler(MultiThreadQueueGenerator):
             else:
                 # randomly sample an idx
                 sample_an_idx = np.random.randint(0, len(target_range[0]))
-                return tuple(i[sample_an_idx] for i in target_range)
+
+                # shift the target idx since the target_range is obtained from the sampling range
+                # not the original range of label data
+                return tuple(
+                    s + t[sample_an_idx] for (t, s)
+                    in zip(target_range, sampling_range['min'])
+                )
 
         # use variable target_range_cache to cache the idx of sampled target
         # in next n_samples blocks

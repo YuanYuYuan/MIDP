@@ -1,3 +1,15 @@
+test_block_generator_for_detector:
+	./generator_for_detector.py \
+		--loader-config configs/nifti_loader.yaml \
+		--generator-config configs/generator_for_detector.yaml \
+		--output-dir outputs
+
+find_bounding_box_ABCs:
+	./find_box.py \
+		--config configs/nifti_loader_ABCs_vis.yaml \
+		--output bbox.json \
+		--padding 20
+
 test_augmentation:
 	rm -rvf outputs
 	./sample_generator.py \
