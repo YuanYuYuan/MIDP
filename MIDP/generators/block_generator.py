@@ -33,6 +33,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         crop_shape=None,
         include_label=True,
         ordered=False,
+        collapse_label=False,
         **kwargs,
     ):
 
@@ -109,6 +110,12 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             self.crop_shape = (crop_shape, ) * 3
         else:
             raise TypeError(crop_shape)
+
+        # FIXME: add for bbox detection
+        self.collapse_label = collapse_label
+        if self.collapse_label:
+            assert self.gap == (0, 0, 0)
+            assert self.crop_shape is None
 
         # XXX: deprecated
         # # count partition if cropping due to fixed data shape
@@ -187,7 +194,14 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         if include_label:
             self.shapes['label'] = self.out_shape
             self.data_types.append('label')
+
         self.zeros = {key: np.zeros(self.shapes[key]) for key in self.shapes}
+
+        # FIXME
+        if self.collapse_label:
+            self.shapes['label'] = (1,)
+            self.shapes['anchor'] = (3,)
+            self.shapes['idx'] = (1,)
 
     def __len__(self):
         return self.total
@@ -277,6 +291,12 @@ class _BlockGenerator(MultiThreadQueueGenerator):
 
                 block[key] = self.zeros[key].copy()
                 block[key][block_slice_idx] = data[key][data_slice_idx]
+
+            # FIXME
+            if self.collapse_label:
+                block['label'] = (np.sum(block['label']) > 0).astype(np.int)
+                block['anchor'] = origin
+                block['idx'] =  data_idx
 
             if self.ordered:
                 idx = {

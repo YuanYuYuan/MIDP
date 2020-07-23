@@ -65,6 +65,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
         shift=None,
         n_samples=64,
         ratios=None,
+        collapse_label=False,
         **kwargs,
     ):
 
@@ -103,6 +104,12 @@ class _BlockSampler(MultiThreadQueueGenerator):
             self.target_sampler = TargetSampler(data_loader.n_labels, ratios)
         self.total = n_samples * data_loader.n_data
 
+        # FIXME
+        self.collapse_label = collapse_label
+        if self.collapse_label:
+            self.shapes['label'] = (1,)
+            self.shapes['anchor'] = (3,)
+
     def __len__(self):
         return self.total
 
@@ -126,6 +133,8 @@ class _BlockSampler(MultiThreadQueueGenerator):
         return self.sample_blocks(data)
 
     def sample_blocks(self, data):
+
+        raw_shape = data['label'].shape
 
         if self.pad_first:
             bigger_shape = tuple(
@@ -240,11 +249,17 @@ class _BlockSampler(MultiThreadQueueGenerator):
             # do cropping
             block = dict()
             for key in self.data_types:
-                # crop_idx = get_crop_idx(target_idx, self.shapes[key])
-                # block[key] = data[key][crop_idx]
-                block[key] = center_crop(data[key], target_idx, self.shapes[key])
+                shape = self.block_shape if key == 'image' else self.out_shape
+                block[key] = center_crop(data[key], target_idx, shape)
 
                 # sanity check
-                assert block[key].shape == self.shapes[key]
+                assert block[key].shape == shape
+
+            # FIXME
+            if self.collapse_label:
+                padding = tuple((x - y)//2 for x,y in zip(data['image'].shape, raw_shape))
+                anchor = tuple(x - y - z//2 for x,y,z in zip(target_idx, padding, self.block_shape))
+                block['anchor'] = anchor
+                block['label'] = (np.sum(block['label']) > 0).astype(np.int)
 
             yield block

@@ -37,10 +37,17 @@ class _BatchGenerator(MultiThreadQueueGenerator):
         self.n_batches = self.n_batches.astype(np.int16)
         assert self.n_batches > 0
 
-        self.zero_batch = {
-            key: np.zeros((batch_size,) + generator.shapes[key])
-            for key in generator.shapes
-        }
+        self.zero_batch = dict()
+        for key in generator.shapes:
+            if key == 'idx':
+                self.zero_batch[key] = ['',] * batch_size
+            else:
+                self.zero_batch[key] = np.zeros((batch_size,) + generator.shapes[key])
+
+        # self.zero_batch = {
+        #     key: np.zeros((batch_size,) + generator.shapes[key])
+        #     for key in generator.shapes
+        # }
 
     def __len__(self):
         return self.n_batches
@@ -66,7 +73,7 @@ class _BatchGenerator(MultiThreadQueueGenerator):
                     # use zero as padding
                     pass
 
-        # process data
+        # process batch data
         for key in batch_data:
             if key == 'image':
                 images = batch_data['image']
@@ -84,7 +91,16 @@ class _BatchGenerator(MultiThreadQueueGenerator):
                 labels = labels.type(torch.LongTensor)
                 batch_data['label'] = labels
 
+            elif key == 'anchor':
+                anchor = batch_data['anchor']
+                anchor = torch.from_numpy(anchor)
+                anchor = anchor.type(torch.LongTensor)
+                batch_data['anchor'] = anchor
+
+            elif key == 'idx':
+                pass
+
             else:
-                raise ValueError('Key should be either image or label.')
+                raise KeyError
 
         return batch_data
