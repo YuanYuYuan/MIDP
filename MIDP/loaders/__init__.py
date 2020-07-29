@@ -3,6 +3,7 @@ from .nifti_loader import NIfTILoader
 from .nrrd_loader import NRRDLoader
 from .cyb_loader import CybLoader
 from .msd_loader import MSDLoader
+from .abcs_loader import ABCSLoader
 
 LOADERS = {
     'NIfTILoader': NIfTILoader,
@@ -10,6 +11,7 @@ LOADERS = {
     'NRRDLoader': NRRDLoader,
     'CybLoader': CybLoader,
     'MSDLoader': MSDLoader,
+    'ABCSLoader': ABCSLoader,
 }
 
 

@@ -42,7 +42,7 @@ def job(data_idx):
 
         # Orientation: RAI -> RAS
         # flip x, y axes
-        # img = img[::-1, ::-1, :]
+        img = img[::-1, ::-1, :]
 
         zoom = sitk_img.GetSpacing()
         if dtype in ['task1', 'task2']:
@@ -52,8 +52,14 @@ def job(data_idx):
         assert zoomed_img.dtype == img.dtype
         img = zoomed_img
 
+        affine = np.eye(4)
+        origin = np.array(sitk_img.GetOrigin())
+        affine[0, 3] = (origin[0] + img.shape[0]) * -1
+        affine[1, 3] = (origin[1] + img.shape[1]) * -1
+        affine[2, 3] = origin[2]
+
         nib.save(
-            nib.Nifti1Image(img, affine=np.eye(4)),
+            nib.Nifti1Image(img, affine=affine),
             os.path.join(output_dir, dtype, data_idx + '.nii.gz')
         )
 
