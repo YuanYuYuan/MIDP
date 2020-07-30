@@ -101,11 +101,21 @@ class ABCSLoader:
 
     # FIXME introduce more modalities
     def get_image(self, data_idx):
-        data = nib.load(os.path.join(
-            self.data_dir,
-            'ct',
-            data_idx + '.nii.gz'
-        )).get_data()
+        if len(self.modalities) == 1:
+            data = nib.load(os.path.join(
+                self.data_dir,
+                'ct',
+                data_idx + '.nii.gz'
+            )).get_data()
+        else:
+            data = np.stack((
+                nib.load(os.path.join(
+                    self.data_dir,
+                    mod,
+                    data_idx + '.nii.gz'
+                )).get_data()
+                for mod in self.modalities
+            ), axis=-1)
 
         if self.use_bbox:
             data = box_crop(data, self.bbox[data_idx]['bbox'])

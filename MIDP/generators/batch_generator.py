@@ -79,7 +79,12 @@ class _BatchGenerator(MultiThreadQueueGenerator):
                 images = batch_data['image']
 
                 # add a channel axis
-                images = np.expand_dims(images, 1)
+                n_dim = len(images.shape)
+                if n_dim == 5:
+                    images = np.moveaxis(images, -1, 1)
+                else:
+                    assert n_dim == 3 or n_dim == 4
+                    images = np.expand_dims(images, 1)
 
                 images = torch.from_numpy(images)
                 images = images.type(torch.FloatTensor)

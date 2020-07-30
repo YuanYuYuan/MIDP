@@ -190,6 +190,13 @@ class _BlockGenerator(MultiThreadQueueGenerator):
 
         # export class variables
         self.shapes = {'image': self.block_shape}
+
+        # adjust the image dimension to fit the case of multi modalities
+        if hasattr(data_loader, 'modalities'):
+            n_channels = len(data_loader.modalities)
+            if n_channels > 1:
+                self.shapes['image'] = self.block_shape + (n_channels,)
+
         self.data_types = ['image']
         if include_label:
             self.shapes['label'] = self.out_shape
