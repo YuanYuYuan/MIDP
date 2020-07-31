@@ -91,12 +91,21 @@ class _BlockSampler(MultiThreadQueueGenerator):
         # data list
         self.data_list = data_loader.data_list
 
+
         # export class variables
         self.shapes = {
             'image': self.block_shape,
             'label': self.out_shape,
         }
         self.data_types = ['image', 'label']
+
+        # adjust the image dimension to fit the case of multi modalities
+        if hasattr(data_loader, 'modalities'):
+            n_channels = len(data_loader.modalities)
+            if n_channels > 1:
+                self.shapes['image'] = self.block_shape + (n_channels,)
+
+        # samplign ratio
         if ratios is None:
             self.uniform_sample = True
         else:
@@ -253,7 +262,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
                 block[key] = center_crop(data[key], target_idx, shape)
 
                 # sanity check
-                assert block[key].shape == shape
+                assert block[key].shape == self.shapes[key], (block[key].shape, self.shapes[key])
 
             # FIXME
             if self.collapse_label:

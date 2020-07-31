@@ -17,7 +17,11 @@ def box_crop(data, box: list):
 
 
 def center_crop(data, center, shape):
-    assert len(data.shape) == len(center) == len(shape)
+    contains_channel = len(data.shape) == 4
+    assert len(center) == len(shape)
+    if contains_channel:
+        assert len(data.shape) == len(center) + 1
+
     crop_idx = {'left': [], 'right': []}
     padding = {'left': [], 'right': []}
 
@@ -43,6 +47,11 @@ def center_crop(data, center, shape):
             break
 
     if need_padding:
+        if contains_channel:
+            zeros_shape = shape + (data.shape[-1],)
+        else:
+            zeros_shape = shape
+
         if isinstance(data, torch.Tensor):
             output = torch.zeros(shape)
         else:

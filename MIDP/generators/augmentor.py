@@ -40,6 +40,7 @@ class _Augmentor(MultiThreadQueueGenerator):
         flip=False,
         transpose=False,
         noise=False,
+        normalization=False,
         affine=False,
         window_width=None,
         window_level=None,
@@ -51,6 +52,15 @@ class _Augmentor(MultiThreadQueueGenerator):
 
         # augmenting methods
         self.methods = []
+
+        if normalization:
+            def _norm(data):
+                mean = np.mean(data['image'], axis=(0, 1, 2))
+                std = np.std(data['image'], axis=(0, 1, 2))
+                data['image'] = (data['image'] - mean) / std
+                return data
+
+            self.methods.append(_norm)
 
         # affine
         if affine:
