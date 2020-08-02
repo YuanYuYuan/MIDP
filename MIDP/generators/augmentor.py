@@ -41,6 +41,7 @@ class _Augmentor(MultiThreadQueueGenerator):
         transpose=False,
         noise=False,
         normalization=False,
+        minmax=False,
         affine=False,
         window_width=None,
         window_level=None,
@@ -61,6 +62,24 @@ class _Augmentor(MultiThreadQueueGenerator):
                 return data
 
             self.methods.append(_norm)
+
+        if minmax:
+            def _minmax(data):
+                lower_percentile = 0.2,
+                upper_percentile = 99.8
+
+                foreground = data['image'] != data['image'][0,0,0]
+                min_val = np.percentile(data['image'][foreground].ravel(), lower_percentile)
+                max_val = np.percentile(data['image'][foreground].ravel(), upper_percentile)
+                data['image'][data['image'] > max_val] = max_val
+                data['image'][data['image'] < min_val] = min_val
+                data['image'] = (data['image'] - min_val) / (max_val - min_val)
+                data['image'][~foreground] = 0
+
+                return data
+
+            self.methods.append(_minmax)
+
 
         # affine
         if affine:
