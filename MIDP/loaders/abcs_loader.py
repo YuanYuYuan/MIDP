@@ -158,8 +158,13 @@ class ABCSLoader:
     def save_prediction(self, data_idx, prediction, output_dir):
         assert isinstance(prediction, np.ndarray), type(prediction)
         os.makedirs(output_dir, exist_ok=True)
+        affine = nib.load(os.path.join(
+            self.data_dir,
+            self.modalities[0],
+            data_idx + '.nii.gz'
+        )).affine
         nib.save(
-            nib.Nifti1Image(prediction.astype(np.int16), affine=np.eye(4)),
+            nib.Nifti1Image(prediction.astype(np.int16), affine=affine),
             os.path.join(output_dir, data_idx + '.nii.gz')
         )
 
