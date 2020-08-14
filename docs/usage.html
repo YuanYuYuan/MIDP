@@ -464,6 +464,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_training_pipeline_design">2.2.2. Training pipeline design</a></li>
 </ul>
 </li>
+<li><a href="#_find_bounding_boxes">2.3. Find bounding boxes</a></li>
 </ul>
 </li>
 <li><a href="#_testing">3. Testing</a>
@@ -1034,6 +1035,25 @@ The following one demo how to use the program to convert the label from NIfTI to
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_find_bounding_boxes"><a class="anchor" href="#_find_bounding_boxes"></a><a class="link" href="#_find_bounding_boxes">2.3. Find bounding boxes</a></h3>
+<div class="paragraph">
+<p>You can modify the data loader to specify which structures to enclose,
+and choose a proper padding to obtain a larger box.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>./find_box.py \
+    --config configs/nrrd_loader_eyes.yaml \
+    --output bbox.json \
+    --padding 20</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After finished, you will obtain a <code>bbox.json</code> file, which can be used
+in the 2nd stage segmentation.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1217,7 +1237,7 @@ then increasing the batch size won&#8217;t speedup the process.
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-04-18 03:09:48 +0800
+Last updated 2020-08-14 23:34:12 +0800
 </div>
 </div>
 <style>

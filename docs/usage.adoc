@@ -487,6 +487,19 @@ A sample structure has been written in `sample_train.py` with a example config `
 
 Note that the `config/training.yaml` assumes a data list file at `data_list.yaml`.
 
+=== Find bounding boxes
+
+You can modify the data loader to specify which structures to enclose,
+and choose a proper padding to obtain a larger box.
+
+    ./find_box.py \
+        --config configs/nrrd_loader_eyes.yaml \
+        --output bbox.json \
+        --padding 20
+
+After finished, you will obtain a `bbox.json` file, which can be used
+in the 2nd stage segmentation.
+
 == Testing
 
 === Data loader
