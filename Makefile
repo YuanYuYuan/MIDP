@@ -1,3 +1,9 @@
+test_abcs_2d_pipeline:
+	./reconstruction_with_reverter.py \
+		--loader-config configs/loader_abcs.yaml \
+		--generator-config configs/abcs_2d_generator.yaml \
+		--output-dir outputs
+
 test_block_generator_for_detector:
 	./generator_for_detector.py \
 		--loader-config configs/nifti_loader.yaml \
