@@ -56,8 +56,9 @@ class _Augmentor(MultiThreadQueueGenerator):
 
         if normalization:
             def _norm(data):
-                mean = np.mean(data['image'], axis=(0, 1, 2))
-                std = np.std(data['image'], axis=(0, 1, 2))
+                axes = tuple(range(len(data['image'].shape)))
+                mean = np.mean(data['image'], axis=axes)
+                std = np.std(data['image'], axis=axes)
                 data['image'] = (data['image'] - mean) / std
                 return data
 
@@ -68,7 +69,7 @@ class _Augmentor(MultiThreadQueueGenerator):
                 lower_percentile = 0.2,
                 upper_percentile = 99.8
 
-                foreground = data['image'] != data['image'][0,0,0]
+                foreground = data['image'] != data['image'][(0,) * len(data['image'].shape)]
                 min_val = np.percentile(data['image'][foreground].ravel(), lower_percentile)
                 max_val = np.percentile(data['image'][foreground].ravel(), upper_percentile)
                 data['image'][data['image'] > max_val] = max_val
