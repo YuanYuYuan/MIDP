@@ -103,18 +103,41 @@ class _Augmentor(MultiThreadQueueGenerator):
                 for key in data:
                     data[key] = torch.Tensor(data[key])
 
-                transformed = transform(torchio.Subject(
-                    image=torchio.Image(
-                        tensor=data['image'],
-                        type=torchio.INTENSITY
-                    ),
-                    label=torchio.Image(
-                        tensor=data['label'],
-                        type=torchio.LABEL
-                    )
-                ))
+                subjs = {'label': torchio.Image(tensor=data['label'], type=torchio.LABEL)}
+                shape = data['image'].shape
 
-                data['image'] = transformed.image.numpy()
+                # We need to seperate out the case of 4D image
+                if len(shape) == 4:
+                    n_channels = shape[-1]
+                    for i in range(n_channels):
+                        subjs.update({
+                            f'ch{i}': torchio.Image(
+                                tensor=data['image'][..., i],
+                                type=torchio.INTENSITY
+                            )
+                        })
+
+                else:
+                    assert len(shape) == 3
+                    subjs.update({
+                        'image': torchio.Image(
+                            tensor=data['image'][..., i],
+                            type=torchio.INTENSITY
+                        )
+                    })
+
+                transformed = transform(torchio.Subject(**subjs))
+
+                if 'image' in subjs.keys():
+                    data['image'] = transformed.image.numpy()
+
+                else:
+                    # if image contains multiple channels,
+                    # then aggregate the transformed results into one
+                    data['image'] = np.stack(tuple(
+                        getattr(transformed, ch).numpy()
+                        for ch in subjs.keys() if 'ch' in ch
+                    ), axis=-1)
                 data['label'] = transformed.label.numpy()
                 return data
 

@@ -38,11 +38,13 @@ class ABCSLoader:
         bbox=None,
         # modalities=['ct', 't1', 't2'],
         modalities=['ct'],
+        preprocess=False,
         task=1,
     ):
 
         self.data_dir = data_dir
         self.modalities = modalities
+        self.preprocess = preprocess
 
         assert task == 1 or task == 2
         self.task = task
@@ -101,19 +103,55 @@ class ABCSLoader:
 
     # FIXME introduce more modalities
     def get_image(self, data_idx):
-        if len(self.modalities) == 1:
+
+        def preprocess_ct(data):
+            from ..preprocessings import window
+            return window(data, width=400, level=0)
+
+        def preprocess_mr(data):
+            dim = len(data.shape)
+
+            # z-score
+            axes = tuple(range(dim))
+            mean = np.mean(data, axis=axes)
+            std = np.std(data, axis=axes)
+            data = (data - mean) / std
+
+            # minmax
+            lower_percentile = 0.2,
+            upper_percentile = 99.8
+            foreground = data != data[(0,) * dim]
+            min_val = np.percentile(data[foreground].ravel(), lower_percentile)
+            max_val = np.percentile(data[foreground].ravel(), upper_percentile)
+            data[data > max_val] = max_val
+            data[data < min_val] = min_val
+            data = (data - min_val) / (max_val - min_val)
+            data[~foreground] = 0
+
+            return data
+
+        def get_data(modality, preprocess):
             data = nib.load(os.path.join(
                 self.data_dir,
-                'ct',
+                modality,
                 data_idx + '.nii.gz'
             )).get_data()
+
+            if preprocess:
+                if modality == 'ct':
+                    return preprocess_ct(data)
+                elif modality in ['t1', 't2']:
+                    return preprocess_mr(data)
+                else:
+                    raise KeyError
+            else:
+                return data
+
+        if len(self.modalities) == 1:
+            data = get_data('ct', self.preprocess)
         else:
             data = np.stack((
-                nib.load(os.path.join(
-                    self.data_dir,
-                    mod,
-                    data_idx + '.nii.gz'
-                )).get_data()
+                get_data(mod, self.preprocess)
                 for mod in self.modalities
             ), axis=-1)
 
