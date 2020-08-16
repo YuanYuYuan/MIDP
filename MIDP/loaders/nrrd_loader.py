@@ -217,7 +217,7 @@ class NRRDLoader:
         return self._data_list
 
     def set_data_list(self, new_list):
-        assert set(new_list).issubset(self._data_list), new_list
+        assert set(new_list).issubset(self._data_list), (new_list, self._data_list)
         self._data_list = new_list
 
     def evaluate(self, data_idx, prediction):
