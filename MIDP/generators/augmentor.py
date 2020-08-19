@@ -139,6 +139,10 @@ class _Augmentor(MultiThreadQueueGenerator):
                         for ch in subjs.keys() if 'ch' in ch
                     ), axis=-1)
                 data['label'] = transformed.label.numpy()
+
+                for key in data:
+                    data[key] = data[key].squeeze()
+
                 return data
 
             self.methods.append(_affine)
@@ -208,18 +212,11 @@ class _Augmentor(MultiThreadQueueGenerator):
 
         if flip:
             def flip_img(img, flip_x, flip_y):
-                n_dim = len(img.shape)
                 if flip_x:
-                    if n_dim == 4:
-                        img = img[:, ::-1, ...]
-                    else:
-                        img = img[::-1, :, ...]
+                    img = img[::-1, :, ...]
 
                 if flip_y:
-                    if n_dim == 4:
-                        img = img[:, :, ::-1, ...]
-                    else:
-                        img = img[:, ::-1, :, ...]
+                    img = img[:, ::-1, ...]
 
                 return img
 
