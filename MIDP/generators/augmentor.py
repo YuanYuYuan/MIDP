@@ -207,14 +207,29 @@ class _Augmentor(MultiThreadQueueGenerator):
         #     self.methods.append(_filter)
 
         if flip:
+            def flip_img(img, flip_x, flip_y):
+                n_dim = len(img.shape)
+                if flip_x:
+                    if n_dim == 4:
+                        img = img[:, ::-1, ...]
+                    else:
+                        img = img[::-1, :, ...]
+
+                if flip_y:
+                    if n_dim == 4:
+                        img = img[:, :, ::-1, ...]
+                    else:
+                        img = img[:, ::-1, :, ...]
+
+                return img
+
             def _flip(data):
-                if random.random() > 0.5:
-                    for key in data:
-                        data[key] = data[key][::-1, :, ...]
-                else:
-                    for key in data:
-                        data[key] = data[key][:, ::-1, ...]
-                return data
+                for key in data:
+                    data[key] = flip_img(
+                        data[key],
+                        flip_x=(random.random() > 0.5),
+                        flip_y=(random.random() > 0.5),
+                    )
             self.methods.append(_flip)
 
         if transpose:
