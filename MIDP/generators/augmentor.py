@@ -121,7 +121,7 @@ class _Augmentor(MultiThreadQueueGenerator):
                     assert len(shape) == 3
                     subjs.update({
                         'image': torchio.Image(
-                            tensor=data['image'][..., i],
+                            tensor=data['image'],
                             type=torchio.INTENSITY
                         )
                     })
