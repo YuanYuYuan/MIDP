@@ -42,7 +42,7 @@ class _Augmentor(MultiThreadQueueGenerator):
         noise=False,
         normalization=False,
         minmax=False,
-        affine=False,
+        affine=None,
         window_width=None,
         window_level=None,
         **kwargs,
@@ -83,26 +83,36 @@ class _Augmentor(MultiThreadQueueGenerator):
 
 
         # affine
-        if affine:
+        if affine is not None:
             import torchio
             from torchio.transforms import (
                 RandomAffine,
                 RandomElasticDeformation,
                 OneOf,
             )
-            transform = OneOf(
-                {
-                    RandomAffine(
-                        translation=10,
-                        degrees=10,
-                        scales=(0.9, 1.1),
-                        default_pad_value='otsu',
-                        image_interpolation='bspline'
-                    ): 0.5,
-                    RandomElasticDeformation(): 0.5
-                },
-                p=0.75,
-            )
+
+            if affine == 'strong':
+                transform = OneOf(
+                    {
+                        RandomAffine(
+                            translation=10,
+                            degrees=10,
+                            scales=(0.9, 1.1),
+                            default_pad_value='otsu',
+                            image_interpolation='bspline'
+                        ): 0.5,
+                        RandomElasticDeformation(): 0.5
+                    },
+                    p=0.75,
+                )
+            else:
+                transform = OneOf(
+                    {
+                        RandomAffine(translation=10): 0.5,
+                        RandomElasticDeformation(): 0.5
+                    },
+                    p=0.75,
+                )
 
             def _affine(data):
 
