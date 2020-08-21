@@ -37,7 +37,7 @@ class _Augmentor(MultiThreadQueueGenerator):
         generator,
         zoom_range=None,
         filter_range=None,
-        flip=False,
+        flip=None,
         transpose=False,
         noise=False,
         normalization=False,
@@ -92,7 +92,13 @@ class _Augmentor(MultiThreadQueueGenerator):
             )
             transform = OneOf(
                 {
-                    RandomAffine(translation=10): 0.5,
+                    RandomAffine(
+                        translation=10,
+                        degrees=10,
+                        scales=(0.9, 1.1),
+                        default_pad_value='otsu',
+                        image_interpolation='bspline'
+                    ): 0.5,
                     RandomElasticDeformation(): 0.5
                 },
                 p=0.75,
@@ -210,13 +216,20 @@ class _Augmentor(MultiThreadQueueGenerator):
         #         return data
         #     self.methods.append(_filter)
 
-        if flip:
-            def flip_img(img, flip_x, flip_y):
+        if flip is not None:
+            assert isinstance(flip, (list, tuple))
+            for f in flip:
+                assert f >= 0 and f <= 1
+
+            def flip_img(img, flip_x, flip_y, flip_z):
                 if flip_x:
-                    img = img[::-1, :, ...]
+                    img = img[::-1, :, :, ...]
 
                 if flip_y:
-                    img = img[:, ::-1, ...]
+                    img = img[:, ::-1, :, ...]
+
+                if flip_z:
+                    img = img[:, :, ::-1, ...]
 
                 return img
 
@@ -224,8 +237,9 @@ class _Augmentor(MultiThreadQueueGenerator):
                 for key in data:
                     data[key] = flip_img(
                         data[key],
-                        flip_x=(random.random() > 0.5),
-                        flip_y=(random.random() > 0.5),
+                        flip_x=(random.random() < flip[0]),
+                        flip_y=(random.random() < flip[1]),
+                        flip_z=(random.random() < flip[2]),
                     )
             self.methods.append(_flip)
 
