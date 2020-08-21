@@ -241,6 +241,7 @@ class _Augmentor(MultiThreadQueueGenerator):
                         flip_y=(random.random() < flip[1]),
                         flip_z=(random.random() < flip[2]),
                     )
+                return data
             self.methods.append(_flip)
 
         if transpose:
