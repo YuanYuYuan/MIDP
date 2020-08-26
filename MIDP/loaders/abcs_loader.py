@@ -202,7 +202,7 @@ class ABCSLoader:
             data_idx + '.nii.gz'
         )).affine
         nib.save(
-            nib.Nifti1Image(prediction.astype(np.int16), affine=affine),
+            nib.Nifti1Image(prediction.astype(np.uint8), affine=affine),
             os.path.join(output_dir, data_idx + '.nii.gz')
         )
 
