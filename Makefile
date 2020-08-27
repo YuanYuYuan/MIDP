@@ -1,3 +1,21 @@
+find_bounding_box_ABCs_optic:
+	./find_box.py \
+		--config configs/loader_abcs_task2_optic.yaml \
+		--output bbox.json \
+		--padding 20
+
+test_reconstruction_with_flat_gen:
+	./reconstruction_with_reverter.py \
+		--loader-config configs/loader_abcs.yaml \
+		--generator-config configs/generator_for_flat_recon.yaml
+
+test_flat_gen:
+	rm -rvf outputs
+	./sample_generator.py \
+		--loader-config configs/loader_abcs.yaml \
+		--generator-config configs/generator_for_flat.yaml \
+		--output-dir outputs
+
 test_abcs_2d_pipeline:
 	./reconstruction_with_reverter.py \
 		--loader-config configs/loader_abcs.yaml \

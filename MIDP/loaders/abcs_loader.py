@@ -38,6 +38,7 @@ class ABCSLoader:
         bbox=None,
         # modalities=['ct', 't1', 't2'],
         modalities=['ct'],
+        ROIs=None,
         preprocess=False,
         task=1,
     ):
@@ -46,15 +47,24 @@ class ABCSLoader:
         self.modalities = modalities
         self.preprocess = preprocess
 
-        assert task == 1 or task == 2
         self.task = task
         if task == 1:
-            self.roi_map = TASK_1
+            self.raw_roi_map = TASK_1
         elif task == 2:
-            self.roi_map = TASK_2
+            self.raw_roi_map = TASK_2
         else:
             raise ValueError('Task should be either 1 or 2.')
-        self.ROIs = list(self.roi_map.keys())
+
+        if ROIs is not None:
+            for key in ROIs:
+                assert key in self.raw_roi_map
+            self.roi_map = {key: idx+1 for (idx, key) in enumerate(ROIs)}
+            self.ROIs = ROIs
+            self.need_remap = True
+        else:
+            self.roi_map = self.raw_roi_map
+            self.ROIs = list(self.roi_map.keys())
+            self.need_remap = False
 
         self._data_list = [
             elm.split('/')[-1].split('.')[0] for elm in glob(
@@ -168,6 +178,11 @@ class ABCSLoader:
 
         if self.use_bbox:
             data = box_crop(data, self.bbox[data_idx]['bbox'])
+
+        if self.need_remap:
+            for key, val in self.raw_roi_map.items():
+                data[data == val] = self.roi_map[key] if key in self.roi_map else 0
+
         return data
 
     def get_label_shape(self, data_idx):
