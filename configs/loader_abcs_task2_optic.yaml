@@ -1,0 +1,16 @@
+name: ABCSLoader
+data_dir: data
+test: False
+task: 2
+ROIs:
+# - 'Brainstem'    # 1
+- 'Chiasm'       # 2
+# - 'Cochlea_L'    # 3
+# - 'Cochlea_R'    # 4
+- 'Eye_L'        # 5
+- 'Eye_R'        # 6
+- 'Lacrimal_L'   # 7
+- 'Lacrimal_R'   # 8
+- 'OpticNerve_L' # 9
+- 'OpticNerve_R' # 10
+preprocess: true

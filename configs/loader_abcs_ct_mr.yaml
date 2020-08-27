@@ -1,0 +1,9 @@
+name: ABCSLoader
+data_dir: data
+test: True
+task: 1
+preprocess: True
+modalities:
+- ct
+- t1
+- t2
