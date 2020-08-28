@@ -98,14 +98,17 @@ def crop_to_shape(data, crop_shape):
 
 
 def pad_to_shape(data, shape):
-    assert len(data.shape) == len(shape)
+    assert len(data.shape) >= len(shape)
+
     for ds, s in zip(data.shape, shape):
         assert ds <= s, (data.shape, shape)
     crop_range = get_crop_idx(
         tuple(s//2 for s in shape),
-        data.shape
+        data.shape[:len(shape)]
     )
-    output = np.zeros(shape)
+    crop_range += (slice(None),) * (len(data.shape) - len(shape))
+    output = np.zeros(shape + data.shape[len(shape):])
+    assert len(output.shape) == len(crop_range)
     output[crop_range] = data
     return output
 
