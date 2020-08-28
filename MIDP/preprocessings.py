@@ -6,12 +6,17 @@ from scipy import ndimage
 
 def box_crop(data, box: list):
     assert len(box) == 6
-    assert len(data.shape) == 3
+    contains_channel = len(data.shape) == 4
+    if not contains_channel:
+        assert len(data.shape) == 3
 
     crop_range = tuple(
         slice(lc, rc) for (lc, rc) in
         zip(box[:3], box[3:])
     )
+
+    if contains_channel:
+        crop_range += (slice(None), )
 
     return data[crop_range]
 
