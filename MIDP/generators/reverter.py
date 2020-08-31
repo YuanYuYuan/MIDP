@@ -37,7 +37,10 @@ class Reverter:
             while len_queue < partition_per_data:
                 if len_queue == 0:
                     queue = {
-                        key: batch_list[batch_idx][key] if isinstance(np.ndarray)
+                        key: batch_list[batch_idx][key] if isinstance(
+                            batch_list[batch_idx][key],
+                            np.ndarray
+                        )
                         else batch_list[batch_idx][key].cpu().detach().numpy()
                         for key in batch_list[batch_idx] if key in self.revertible
                     }
@@ -46,7 +49,10 @@ class Reverter:
                         queue[key] = np.concatenate(
                             (
                                 queue[key],
-                                batch_list[batch_idx][key] if isinstance(np.ndarray)
+                                batch_list[batch_idx][key] if isinstance(
+                                    batch_list[batch_idx][key],
+                                    np.ndarray
+                                )
                                 else batch_list[batch_idx][key].cpu().detach().numpy(),
                             ),
                             axis=0
