@@ -1,3 +1,15 @@
+test_generator_abcs_optic_bbox:
+	rm -rvf outputs
+	./sample_generator.py \
+		--loader-config configs/loader_abcs_task2_optic_bbox.yaml \
+		--generator-config configs/genenrator_abcs_optic_bbox.yaml \
+		--output-dir outputs
+
+test_reconstruction_abcs_optic_bbox:
+	./reconstruction_with_reverter.py \
+		--loader-config configs/loader_abcs_task2_optic_bbox.yaml \
+		--generator-config configs/genenrator_for_reconstruction_abcs_optic_bbox.yaml
+
 find_bounding_box_ABCs_optic:
 	./find_box.py \
 		--config configs/loader_abcs_task2_optic.yaml \

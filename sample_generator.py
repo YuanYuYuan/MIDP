@@ -48,7 +48,8 @@ for idx, data in tqdm(
 ):
     if args.output_dir is not None:
         for batch_idx, image in enumerate(data['image']):
-            image = np.squeeze(image.numpy())
+            # image = np.squeeze(image.numpy())
+            image = image.numpy()[0]
             file_path = os.path.join(
                 args.output_dir,
                 f'idx-{idx:03}-batch-{batch_idx:02}.nii.gz'

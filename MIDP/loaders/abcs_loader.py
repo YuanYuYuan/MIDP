@@ -40,12 +40,16 @@ class ABCSLoader:
         modalities=['ct'],
         ROIs=None,
         preprocess=False,
+        window_width=400,
+        window_level=0,
         task=1,
     ):
 
         self.data_dir = data_dir
         self.modalities = modalities
         self.preprocess = preprocess
+        self.window_width = window_width
+        self.window_level = window_level
 
         self.task = task
         if task == 1:
@@ -111,12 +115,15 @@ class ABCSLoader:
 
             return shape
 
-    # FIXME introduce more modalities
     def get_image(self, data_idx):
 
         def preprocess_ct(data):
             from ..preprocessings import window
-            return window(data, width=400, level=0)
+            return window(
+                data,
+                width=self.window_width,
+                level=self.window_level,
+            )
 
         def preprocess_mr(data):
             dim = len(data.shape)
