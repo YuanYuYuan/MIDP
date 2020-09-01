@@ -72,7 +72,7 @@ class ABCSLoader:
 
         self._data_list = [
             elm.split('/')[-1].split('.')[0] for elm in glob(
-                os.path.join(self.data_dir, 'task' + str(task), '*.nii.gz')
+                os.path.join(self.data_dir, self.modalities[0], '*.nii.gz')
             )
         ]
         assert len(self._data_list) > 0
