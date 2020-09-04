@@ -34,7 +34,11 @@ def job(data_idx):
     # Roll axes from x,y,z to z,y,x
     img = img.T
 
-    source_itk = sitk.ReadImage(os.path.join(args.mha_dir, data_idx + '_labelmap_task1.mha'))
+    ref_file = os.path.join(args.mha_dir, data_idx + '_labelmap_task1.mha')
+    if not os.path.exists(ref_file):
+        ref_file = os.path.join(args.mha_dir, '001' + '_labelmap_task1.mha')
+    source_itk = sitk.ReadImage(ref_file)
+
 
     img = sitk.GetImageFromArray(img)
     img.CopyInformation(source_itk)
