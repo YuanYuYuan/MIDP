@@ -39,7 +39,7 @@ class _Augmentor(MultiThreadQueueGenerator):
         filter_range=None,
         flip=None,
         transpose=False,
-        noise=False,
+        noise=None,
         normalization=False,
         minmax=False,
         affine=None,
@@ -192,11 +192,13 @@ class _Augmentor(MultiThreadQueueGenerator):
                 return data
             self.methods.append(_window)
 
-        if noise:
+        if noise is not None:
+            assert isinstance(noise, float)
+            assert noise > 0.
             def _noise(data):
                 data['image'] += np.random.normal(
                     loc=0.0,
-                    scale=0.05,
+                    scale=noise,
                     size=data['image'].shape
                 )
                 return data
