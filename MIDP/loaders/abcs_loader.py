@@ -40,6 +40,7 @@ class ABCSLoader:
         modalities=['ct'],
         ROIs=None,
         preprocess=False,
+        mr_preprocessing=['minmax', 'zscore'],
         window_width=400,
         window_level=0,
         task=1,
@@ -50,6 +51,7 @@ class ABCSLoader:
         self.preprocess = preprocess
         self.window_width = window_width
         self.window_level = window_level
+        self.mr_preprocessing = mr_preprocessing
 
         self.task = task
         if task == 1:
@@ -128,22 +130,29 @@ class ABCSLoader:
         def preprocess_mr(data):
             dim = len(data.shape)
 
-            # z-score
-            axes = tuple(range(dim))
-            mean = np.mean(data, axis=axes)
-            std = np.std(data, axis=axes)
-            data = (data - mean) / std
+            for name in self.mr_preprocessing:
 
-            # minmax
-            lower_percentile = 0.2,
-            upper_percentile = 99.8
-            foreground = data != data[(0,) * dim]
-            min_val = np.percentile(data[foreground].ravel(), lower_percentile)
-            max_val = np.percentile(data[foreground].ravel(), upper_percentile)
-            data[data > max_val] = max_val
-            data[data < min_val] = min_val
-            data = (data - min_val) / (max_val - min_val)
-            data[~foreground] = 0
+                if name == 'zscore':
+                    # z-score
+                    axes = tuple(range(dim))
+                    mean = np.mean(data, axis=axes)
+                    std = np.std(data, axis=axes)
+                    data = (data - mean) / std
+
+                elif name == 'minmax':
+                    # minmax
+                    lower_percentile = 0.2,
+                    upper_percentile = 99.8
+                    foreground = data != data[(0,) * dim]
+                    min_val = np.percentile(data[foreground].ravel(), lower_percentile)
+                    max_val = np.percentile(data[foreground].ravel(), upper_percentile)
+                    data[data > max_val] = max_val
+                    data[data < min_val] = min_val
+                    data = (data - min_val) / (max_val - min_val)
+                    data[~foreground] = 0
+
+                else:
+                    raise ValueError
 
             return data
 
