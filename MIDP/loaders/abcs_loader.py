@@ -29,6 +29,25 @@ TASK_2 = {
     'OpticNerve_R': 10
 }
 
+TASK_3 = {
+    'Brainstem': 1,
+    'Chiasm': 2,
+    'Cochlea_L': 3,
+    'Cochlea_R': 4,
+    'Eye_L': 5,
+    'Eye_R': 6,
+    'Lacrimal_L': 7,
+    'Lacrimal_R': 8,
+    'OpticNerve_L': 9,
+    'OpticNerve_R': 10,
+    'Cerebellum': 11,
+    'Falx': 12,
+    'Sinuses': 13,
+    'Tentorium': 14,
+    'Ventricles': 15,
+}
+
+
 class ABCSLoader:
 
     def __init__(
@@ -58,8 +77,10 @@ class ABCSLoader:
             self.raw_roi_map = TASK_1
         elif task == 2:
             self.raw_roi_map = TASK_2
+        elif task == 3:
+            self.raw_roi_map = TASK_3
         else:
-            raise ValueError('Task should be either 1 or 2.')
+            raise ValueError('Task should be either 1, 2 or 3.')
 
         if ROIs is not None:
             for key in ROIs:
