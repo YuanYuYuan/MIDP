@@ -1,3 +1,11 @@
+# postponed
+test_augmentation_affine:
+	rm -rvf outputs
+	./sample_generator.py \
+		--loader-config configs/loader_abcs.yaml \
+		--generator-config configs/generator_abcs.yaml \
+		--output-dir outputs
+
 test_generator_abcs_optic_bbox:
 	rm -rvf outputs
 	./sample_generator.py \
