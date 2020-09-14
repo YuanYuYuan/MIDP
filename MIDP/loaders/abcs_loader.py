@@ -211,8 +211,8 @@ class ABCSLoader:
 
         if self.cheat:
             label = self.get_label(data_idx)
-            onehot = np.identity(len(self.roi_map) + 1)[label]
-            data = np.stack((data, onehot), axis=-1)
+            label = np.expand_dims(label, -1)
+            data = np.concatenate((data, label), axis=-1)
 
         return data
 
