@@ -210,7 +210,9 @@ class ABCSLoader:
             data = box_crop(data, self.bbox[data_idx]['bbox'])
 
         if self.cheat:
-            data = np.stack((data, self.get_label(data_idx)), axis=-1)
+            label = self.get_label(data_idx)
+            onehot = np.identity(len(self.roi_map) + 1)[label]
+            data = np.stack((data, onehot), axis=-1)
 
         return data
 
