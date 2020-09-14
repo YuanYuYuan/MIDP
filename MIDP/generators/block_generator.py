@@ -194,6 +194,12 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         # adjust the image dimension to fit the case of multi modalities
         if hasattr(data_loader, 'modalities'):
             n_channels = len(data_loader.modalities)
+
+            # adjust the image dimension to fit the cheat case
+            if hasattr(data_loader, 'cheat'):
+                if data_loader.cheat:
+                    n_channels += 1
+
             if n_channels > 1:
                 self.shapes['image'] = self.block_shape + (n_channels,)
 

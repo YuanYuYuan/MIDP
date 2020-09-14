@@ -103,7 +103,6 @@ class _BlockSampler(MultiThreadQueueGenerator):
         if hasattr(data_loader, 'modalities'):
             n_channels = len(data_loader.modalities)
 
-
             # adjust the image dimension to fit the cheat case
             if hasattr(data_loader, 'cheat'):
                 if data_loader.cheat:
