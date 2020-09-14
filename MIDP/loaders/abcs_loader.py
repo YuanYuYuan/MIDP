@@ -63,6 +63,7 @@ class ABCSLoader:
         window_width=400,
         window_level=0,
         task=1,
+        cheat=False,
     ):
 
         self.data_dir = data_dir
@@ -71,6 +72,7 @@ class ABCSLoader:
         self.window_width = window_width
         self.window_level = window_level
         self.mr_preprocessing = mr_preprocessing
+        self.cheat = cheat
 
         self.task = task
         if task == 1:
@@ -202,8 +204,14 @@ class ABCSLoader:
                 for mod in self.modalities
             ), axis=-1)
 
+
+
         if self.use_bbox:
             data = box_crop(data, self.bbox[data_idx]['bbox'])
+
+        if self.cheat:
+            data = np.stack((data, self.get_label(data_idx)), axis=-1)
+
         return data
 
     def get_label(self, data_idx):
