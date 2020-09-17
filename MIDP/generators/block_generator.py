@@ -34,6 +34,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         include_label=True,
         ordered=False,
         collapse_label=False,
+        keep_ch=False,
         **kwargs,
     ):
 
@@ -47,6 +48,9 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             self.shuffle = False
         else:
             self.shuffle = shuffle
+
+        # keep the channel while reverting
+        self.keep_ch = keep_ch
 
         # format block_shape
         if isinstance(block_shape, (list, tuple)):
@@ -383,7 +387,7 @@ class _BlockGenerator(MultiThreadQueueGenerator):
         if isinstance(blocks, np.ndarray):
             restoration = np.zeros(zeros_shape)
         else:
-            # FIXME torch.Tensor is not allowed anymore due to the later restoration
+            # FIXME torch.Tensor is not allowed any more due to the later restoration
             import torch
             assert torch.is_tensor(blocks)
             restoration = torch.zeros(zeros_shape, dtype=torch.long)
@@ -428,13 +432,17 @@ class _BlockGenerator(MultiThreadQueueGenerator):
             if self.overlap:
                 restoration /= count
 
-            for i in range(1, restoration.shape[0]):
-                restoration[i, ...] += \
-                    (restoration[i, ...] >= output_threshold).astype(np.float)
+            if not self.keep_ch:
+                for i in range(1, restoration.shape[0]):
+                    restoration[i, ...] += \
+                        (restoration[i, ...] >= output_threshold).astype(np.float)
 
-            # NOTE: determine use soft or hard threshold
-            # restoration[1:, ...] = (restoration[1:, ...] >= output_threshold).astype(np.float)
-            restoration = np.argmax(restoration, 0)
+                # NOTE: determine use soft or hard threshold
+                # restoration[1:, ...] = (restoration[1:, ...] >= output_threshold).astype(np.float)
+                restoration = np.argmax(restoration, 0)
+
+            else:
+                restoration = np.moveaxis(restoration, 0, -1)
 
         # reshape the restoration to the original size
         orig_shape = self.img_shape_dict[data_idx]

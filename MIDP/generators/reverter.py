@@ -78,13 +78,13 @@ class Reverter:
                             roi: dice_score[0] for roi in self.ROIs
                         }
 
-
                 elif key == 'prediction':
                     output['prediction'] = self.revert(
                         data_idx,
                         queue['prediction'][:partition_per_data],
                         output_threshold=output_threshold
                     )
+
                 else:
                     assert key in self.revertible
                 queue[key] = queue[key][partition_per_data:]
