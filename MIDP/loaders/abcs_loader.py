@@ -197,7 +197,7 @@ class ABCSLoader:
                 return data
 
         if len(self.modalities) == 1:
-            data = get_data('ct', self.preprocess)
+            data = get_data(self.modalities[0], self.preprocess)
         else:
             data = np.stack((
                 get_data(mod, self.preprocess)
