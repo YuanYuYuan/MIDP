@@ -62,7 +62,7 @@ class NIfTILoader:
 
         if self.use_bbox:
             data = box_crop(data, self.bbox[data_idx]['bbox'])
-        return data
+        return data.astype(np.int16)
 
     def get_label(self, data_idx):
         data = nib.load(os.path.join(
@@ -73,7 +73,7 @@ class NIfTILoader:
 
         if self.use_bbox:
             data = box_crop(data, self.bbox[data_idx]['bbox'])
-        return data
+        return data.astype(np.uint8)
 
     def get_label_shape(self, data_idx):
         if self.use_bbox:
