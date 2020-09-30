@@ -50,13 +50,13 @@ class MSDLoader:
         return nib.load(os.path.join(
             self.image_dir,
             data_idx + '.nii.gz'
-        )).get_data()
+        )).get_data().astype(np.int16)
 
     def get_label(self, data_idx):
         return nib.load(os.path.join(
             self.label_dir,
             data_idx + '.nii.gz'
-        )).get_data()
+        )).get_data().astype(np.uint8)
 
     def get_label_shape(self, data_idx):
         return nib.load(os.path.join(
