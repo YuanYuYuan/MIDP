@@ -23,7 +23,7 @@ class Reverter:
         self.revertible = ['match', 'total', 'prediction']
         self.ROIs = data_gen.struct['DL'].ROIs
 
-    def on_batches(self, batch_list: List[dict], output_threshold=0.35):
+    def on_batches(self, batch_list: List[dict], output_threshold=0.5):
 
         assert len(batch_list) * self.batch_size >= sum(self.partition), \
             (len(batch_list) * self.batch_size, sum(self.partition))

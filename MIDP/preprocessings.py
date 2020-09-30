@@ -113,9 +113,10 @@ def pad_to_shape(data, shape):
     return output
 
 
-def window(image, width=100, level=50):
-    image = (image - level + width/2) / width
-    image = np.clip(image, 0., 1.0)
+def window(image, width=100, level=50, vmin=0., vmax=1.):
+    # image = (image - level + width/2) / width
+    image = (image - level + width/2) * (vmax - vmin) / width + vmin
+    image = np.clip(image, vmin, vmax)
     return image
 
 

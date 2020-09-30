@@ -28,6 +28,9 @@ data_list = [
     glob(os.path.join(config['data_dir'], '*/'))
 ]
 
+IMAGE_TYPE = np.int16
+LABEL_TYPE = np.uint8
+
 os.makedirs(config['output_dir'], exist_ok=True)
 for key in ['images', 'labels']:
     os.makedirs(os.path.join(config['output_dir'], key), exist_ok=True)
@@ -45,8 +48,10 @@ def load_image(data_idx):
     ))
     image = nrrd_data[0]
     spacing = get_spacing(nrrd_data)
-    return image.astype(np.int16), spacing
+    return image.astype(IMAGE_TYPE), spacing
 
+def correct_orientation(data):
+    return data[::-1, ::-1, ...]
 
 def load_label(data_idx):
     label: np.Array = None
@@ -66,7 +71,7 @@ def load_label(data_idx):
             label = np.maximum(label, nrrd_data[0] * value)
             assert spacing == get_spacing(nrrd_data)
 
-    return label.astype(np.int16), spacing
+    return label.astype(LABEL_TYPE), spacing
 
 
 def convert(data_idx, order=2):
@@ -76,15 +81,19 @@ def convert(data_idx, order=2):
     assert image.shape == label.shape
     zoom = tuple(s / config['spacing'] for s in spacing_1)
 
+    # image
     image = ndimage.zoom(image, zoom, order=order, mode='nearest')
-    image = image.astype(np.int16)
+    image = image.astype(IMAGE_TYPE)
+    image = correct_orientation(image)
     nib.save(
         nib.Nifti1Image(image, affine=np.eye(4)),
         os.path.join(config['output_dir'], 'images', data_idx + '.nii.gz')
     )
 
+    # label
     label = ndimage.zoom(label, zoom, order=0, mode='nearest')
-    label = label.astype(np.int16)
+    label = label.astype(LABEL_TYPE)
+    label = correct_orientation(label)
     nib.save(
         nib.Nifti1Image(label, affine=np.eye(4)),
         os.path.join(config['output_dir'], 'labels', data_idx + '.nii.gz')

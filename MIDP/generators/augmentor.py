@@ -45,12 +45,15 @@ class _Augmentor(MultiThreadQueueGenerator):
         affine=None,
         window_width=None,
         window_level=None,
+        window_vmax=1.0,
+        window_vmin=0.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.generator = generator
         self.shapes = generator.shapes
-
+        self.window_vmax = window_vmax
+        self.window_vmin = window_vmin
         # augmenting methods
         self.methods = []
 
@@ -187,7 +190,9 @@ class _Augmentor(MultiThreadQueueGenerator):
                 data['image'] = window(
                     data['image'],
                     width=_window_width,
-                    level=_window_level
+                    level=_window_level,
+                    vmin=self.window_vmin,
+                    vmax=self.window_vmax,
                 )
                 return data
             self.methods.append(_window)

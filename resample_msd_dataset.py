@@ -88,7 +88,7 @@ def convert(data_idx):
         np.abs(label_zoom),
         order=0,
         mode='nearest'
-    ).astype(np.int16)
+    ).astype(np.uint8)
     nib.save(
         nib.Nifti1Image(resampled_label, affine=np.eye(4)),
         os.path.join(
