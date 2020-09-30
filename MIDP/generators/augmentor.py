@@ -47,13 +47,12 @@ class _Augmentor(MultiThreadQueueGenerator):
         window_level=None,
         window_vmax=1.0,
         window_vmin=0.0,
+        intensity_shift=0.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.generator = generator
         self.shapes = generator.shapes
-        self.window_vmax = window_vmax
-        self.window_vmin = window_vmin
         # augmenting methods
         self.methods = []
 
@@ -191,8 +190,8 @@ class _Augmentor(MultiThreadQueueGenerator):
                     data['image'],
                     width=_window_width,
                     level=_window_level,
-                    vmin=self.window_vmin,
-                    vmax=self.window_vmax,
+                    vmin=window_vmin,
+                    vmax=window_vmax,
                 )
                 return data
             self.methods.append(_window)
@@ -268,6 +267,13 @@ class _Augmentor(MultiThreadQueueGenerator):
                         data[key] = np.moveaxis(data[key], 0, 1)
                 return data
             self.methods.append(_transpose)
+
+        if intensity_shift > 0.:
+            def _shift(data):
+                data['image'] += (np.random.rand() * 2.0 - 1.0) * intensity_shift
+                return data
+            self.methods.append(_shift)
+
 
     def __len__(self):
         return len(self.generator)
