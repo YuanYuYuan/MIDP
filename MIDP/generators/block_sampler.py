@@ -74,19 +74,39 @@ class _BlockSampler(MultiThreadQueueGenerator):
         # init variables
         self.shuffle = shuffle
         self.data_loader = data_loader
-        self.out_shape = block_shape if out_shape is None else out_shape
-        self.block_shape = block_shape
         self.n_samples = n_samples
-        self.shift = tuple(shift) if isinstance(shift, list) else shift
         self.pad_first = pad_first
-        if self.shift is not None:
-            assert len(self.shift) == len(self.block_shape)
-            # for s, o in zip(self.shift, self.out_shape):
-            #     assert s <= (o // 2)
 
-        # in case of not tuple
-        self.out_shape = tuple(self.out_shape)
-        self.block_shape = tuple(self.block_shape)
+        # format block_shape
+        if isinstance(block_shape, (list, tuple)):
+            assert len(block_shape) == 3
+            self.block_shape = tuple(s for s in block_shape)
+        elif isinstance(block_shape, int):
+            self.block_shape = (block_shape, ) * 3
+        else:
+            raise TypeError(block_shape)
+
+        # format out_shape
+        if out_shape is None:
+             self.out_shape = self.block_shape
+        elif isinstance(out_shape, (list, tuple)):
+            assert len(out_shape) == 3
+            self.out_shape = tuple(s for s in out_shape)
+        elif isinstance(out_shape, int):
+            self.out_shape = (out_shape, ) * 3
+        else:
+            raise TypeError(out_shape)
+
+        # format shift
+        if shift is None:
+            self.shift = None
+        elif isinstance(shift, int):
+            self.shift = (shift, ) * 3
+        elif isinstance(shift, (list, tuple)):
+            assert len(shift) == 3
+            self.shift = tuple(s for s in shift)
+        else:
+            raise TypeError(shift)
 
         # data list
         self.data_list = data_loader.data_list

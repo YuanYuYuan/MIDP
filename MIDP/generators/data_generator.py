@@ -9,6 +9,18 @@ contains mainly 3 parts:
 from .. import generators
 from ..loaders import DataLoader
 from typing import Dict
+import yaml
+
+
+def load_gen(gen_config):
+    assert 'data' in gen_config
+    with open(gen_config.pop('data')) as f:
+        data_config = yaml.safe_load(f)
+    loader_config = data_config['loader']
+    loader_name = loader_config.pop('name')
+    data_loader = DataLoader(loader_name, **loader_config)
+    data_loader.set_data_list(data_config['list'])
+    return DataGenerator(data_loader, gen_config)
 
 
 class DataGenerator:
