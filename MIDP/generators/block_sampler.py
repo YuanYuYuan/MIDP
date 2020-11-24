@@ -21,7 +21,7 @@ class TargetSampler:
 
         # ensure in list type
         if not isinstance(ratios, list):
-            ratios = [ratios]
+            ratios = list(ratios)
 
         # e.g. ratios: [bg, fg1, fg2] = [0.1, 0.4, 0.5],
         # then prob_interval: [bg, fg1, fg2] = [0.1, 0.5, 1.0]
@@ -134,6 +134,16 @@ class _BlockSampler(MultiThreadQueueGenerator):
         # samplign ratio
         if ratios is None:
             self.uniform_sample = True
+        elif isinstance(ratios, float):
+            self.uniform_sample = False
+            fg_ratio = ratios
+            assert fg_ratio <= 1.0 and fg_ratio >= 0.
+            bg_ratio = 1 - fg_ratio
+            n_fg = data_loader.n_labels - 1
+            self.target_sampler = TargetSampler(
+                data_loader.n_labels,
+                [bg_ratio] + [fg_ratio / n_fg] * n_fg
+            )
         else:
             self.uniform_sample = False
             self.target_sampler = TargetSampler(data_loader.n_labels, ratios)
@@ -278,7 +288,7 @@ class _BlockSampler(MultiThreadQueueGenerator):
             if self.shift:
                 target_idx = tuple(
                     t + int(np.clip(np.random.normal(scale=1.5), -1, 1) * s)
-                    for t, s in zip(target_idx, self.shift)
+                    for (t, s) in zip(target_idx, self.shift)
                 )
 
             # do cropping
