@@ -58,13 +58,15 @@ def center_crop(data, center, shape):
             zeros_shape = shape
 
         if isinstance(data, torch.Tensor):
-            output = torch.zeros(shape)
+            output = torch.zeros(zeros_shape)
         else:
-            output = np.zeros(shape)
+            output = np.zeros(zeros_shape)
+
         output[tuple(
             slice(lp, s - rp) for (lp, rp, s)
             in zip(padding['left'], padding['right'], shape)
         )] = data[crop_range]
+
         return output
 
     else:
