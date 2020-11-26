@@ -61,7 +61,6 @@ class _BlockSampler(MultiThreadQueueGenerator):
         shuffle=False,
         block_shape=(128, 128, 30),
         out_shape=None,
-        pad_first=False,
         shift=None,
         n_samples=64,
         ratios=None,
@@ -75,7 +74,6 @@ class _BlockSampler(MultiThreadQueueGenerator):
         self.shuffle = shuffle
         self.data_loader = data_loader
         self.n_samples = n_samples
-        self.pad_first = pad_first
 
         # format block_shape
         if isinstance(block_shape, (list, tuple)):
@@ -180,17 +178,8 @@ class _BlockSampler(MultiThreadQueueGenerator):
     def sample_blocks(self, data):
 
         raw_shape = data['label'].shape
-
-        if self.pad_first:
-            bigger_shape = tuple(
-                bs // 2 + ds for (bs, ds)
-                in zip(self.block_shape, data['label'].shape)
-            )
-            for key in data:
-                data[key] = pad_to_shape(data[key], bigger_shape)
-
         need_padding = False
-        for a, b in zip(data['label'].shape, self.block_shape):
+        for (a, b) in zip(data['label'].shape, self.block_shape):
             if a <= b:
                 need_padding = True
                 break
@@ -205,20 +194,8 @@ class _BlockSampler(MultiThreadQueueGenerator):
 
         # create a proper sampling range
         sampling_range = dict()
-        if self.pad_first:
-            sampling_range['min'] = tuple(bs//2 for bs in self.block_shape)
-        else:
-            sampling_range['min'] = tuple(bs//2 for bs in self.block_shape)
-
-        sampling_range['max'] = tuple(
-            (ls - bs//2) for (ls, bs) in
-            zip(data['label'].shape, self.block_shape)
-        )
-
-        # sanity check
-        for a, b in zip(sampling_range['min'], sampling_range['max']):
-            assert a < b, (a, b, data['label'].shape)
-
+        sampling_range['min'] = (0, 0, 0)
+        sampling_range['max'] = data['label'].shape
         sampling_range['idx'] = tuple(
             slice(_min, _max) for (_min, _max)
             in zip(sampling_range['min'], sampling_range['max'])
