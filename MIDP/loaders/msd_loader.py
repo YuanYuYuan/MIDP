@@ -80,12 +80,12 @@ class MSDLoader:
     def save_prediction(self, data_idx, prediction, output_dir):
         assert isinstance(prediction, np.ndarray), type(prediction)
         os.makedirs(output_dir, exist_ok=True)
-        affine = nib.load(os.path.join(
+        header = nib.load(os.path.join(
             self.image_dir,
             data_idx + '.nii.gz'
-        )).affine
+        )).header.copy()
         nib.save(
-            nib.Nifti1Image(prediction.astype(np.uint8), affine=affine),
+            nib.Nifti1Image(prediction.astype(np.uint8), None, header=header),
             os.path.join(output_dir, data_idx + '.nii.gz')
         )
 
