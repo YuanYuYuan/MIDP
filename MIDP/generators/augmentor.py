@@ -250,13 +250,11 @@ class _Augmentor(MultiThreadQueueGenerator):
                 return img
 
             def _flip(data):
+                to_flip_x = random.random() < flip[0]
+                to_flip_y = random.random() < flip[1]
+                to_flip_z = random.random() < flip[2]
                 for key in data:
-                    data[key] = flip_img(
-                        data[key],
-                        flip_x=(random.random() < flip[0]),
-                        flip_y=(random.random() < flip[1]),
-                        flip_z=(random.random() < flip[2]),
-                    )
+                    data[key] = flip_img(data[key], flip_x=to_flip_x, flip_y=to_flip_y, flip_z=to_flip_z)
                 return data
             self.methods.append(_flip)
 
