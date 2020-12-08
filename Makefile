@@ -1,3 +1,8 @@
+check_sampler_quality:
+	./check_sampler_quality.py \
+		--loader-config configs/loader_abcs_task3.yaml \
+		--generator-config configs/genenrator_abcs_fg_bg.yaml \
+
 # postponed
 test_augmentation_affine:
 	rm -rvf outputs
